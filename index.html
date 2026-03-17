@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M6 14 Q16 26 26 14' fill='none' stroke='%230051CC' stroke-width='3' stroke-linecap='round'/></svg>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Si-Xian Design</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F4F4F4;
+      --bg-card: #F0F0EC;
+      --text: #111110;
+      --text-2: #2A2A27;
+      --text-3: #444441;
+      --border: #C8C8C2;
+      --accent: #0051CC;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.85;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      padding: 0 48px;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(248,248,245,0.92);
+      backdrop-filter: blur(16px);
+      z-index: 100;
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 15px;
+      letter-spacing: -0.02em; color: var(--text);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a {
+      font-size: 13px; font-weight: 500;
+      color: var(--text-2); text-decoration: none;
+      letter-spacing: 0.01em;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── Intro ── */
+    .intro-wrap {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .intro {
+      padding: 0 48px;
+      max-width: 1100px; margin: 0 auto; width: 100%;
+      flex: 1;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .intro-label {
+      font-size: 12px; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-3); margin-bottom: 24px;
+    }
+    .intro-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(52px, 7vw, 96px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+      color: var(--text);
+      margin-bottom: 80px;
+    }
+    .intro-title em {
+      font-style: normal;
+      color: var(--text);
+    }
+    .intro-title em {
+      font-style: normal;
+      color: var(--text);
+    }
+    .intro-row {
+      max-width: 560px;
+      margin-left: 16px;
+    }
+    .intro-sub {
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.85;
+    color: var(--text-2);
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px; background: var(--border);
+      margin: 0 48px;
+    }
+
+    /* ── Work section ── */
+    .work {
+      padding: 96px 48px 160px;
+      max-width: 1350px; margin: 0 auto;
+    }
+    .work-header {
+      display: flex; align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 80px;
+    }
+    .work-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-3);
+    }
+    .work-count {
+      font-size: 12px; color: var(--text-3);
+    }
+
+    /* ── Project rows ── */
+    .project-list { display: flex; flex-direction: column; }
+
+    .project-row {
+      display: grid;
+      grid-template-columns: 1fr 640px;
+      gap: 96px;
+      align-items: center;
+      padding: 130px 0;
+      border-top: 1px solid var(--border);
+      text-decoration: none;
+      color: inherit;
+      transition: none;
+      position: relative;
+    }
+    .project-row:last-child { border-bottom: 1px solid var(--border); }
+
+    /* Hover line animation */
+    .project-row::before {
+      content: '';
+      position: absolute; left: 0; top: 0;
+      width: 0; height: 2px;
+      background: var(--accent);
+      transition: width 0.4s ease;
+    }
+    .project-row:hover::before { width: 100%; }
+
+    .project-left { }
+    .project-index {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-3); margin-bottom: 16px;
+    }
+    .project-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(45px, 5vw, 65px);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      transition: color 0.2s;
+    }
+    .project-row:hover .project-name { color: var(--accent); }
+    .project-desc {
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1.85;
+      margin-bottom: 32px;
+      color: var(--text-2);
+    }
+    .project-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+    .p-tag {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-3);
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      background: var(--bg);
+    }
+    .project-cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 600;
+      color: var(--accent); letter-spacing: 0.02em;
+      transition: gap 0.2s;
+    }
+    .project-row:hover .project-cta { gap: 14px; }
+
+    .project-row.reverse {
+      grid-template-columns: 640px 1fr;
+    }
+    .project-row.reverse .project-visual {
+      order: -1;
+    }
+
+    /* Visual panel */
+    .project-visual {
+      height: 400px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 20px 48px rgba(0,0,0,0.13);
+      position: relative;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+    .project-row:hover .project-visual {
+      transform: translateY(-10px) rotate(0.5deg);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.10), 0 32px 72px rgba(0,0,0,0.16);
+    }
+    .project-visual img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Placeholder visuals — each unique */
+    .vis-smangus {
+      background: #E8E4DC;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .vis-finding {
+      background: #E4E8EE;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .vis-chempion {
+      background: #E4EDE8;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* SVG placeholder illustrations */
+    .vis-inner {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── About ── */
+.about {
+  border-top: 1px solid var(--border);
+  padding: 200px 55px;
+  background: var(--bg);
+}
+.about-inner {
+  max-width: 900px; margin: 0 auto;
+}
+.about-name {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 48px;
+  color: var(--text);
+}
+.about-intro {
+  font-size: 17px; color: var(--text-2);
+  line-height: 1.8; margin-bottom: 72px;
+}
+.accordion-item {
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+}
+.accordion-item:last-child { border-bottom: 1px solid var(--border); }
+.accordion-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 0;
+  transition: color 0.15s;
+}
+.accordion-item:hover .accordion-header { color: var(--text); }
+.accordion-title {
+  font-size: 16px; font-weight: 400; color: var(--text);
+}
+.accordion-icon {
+  font-size: 20px; color: var(--text-3);
+  transition: transform 0.25s ease;
+  line-height: 1;
+}
+.accordion-item.open .accordion-icon {
+  transform: rotate(45deg);
+}
+/* --- Optimized Accordion Animation --- */
+.accordion-body {
+  display: grid;
+  grid-template-rows: 0fr; /* Initial state: closed */
+  /* Using 0.4s and Material Bezier for a snappy yet smooth start */
+  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+  overflow: hidden;
+}
+
+.accordion-item.open .accordion-body {
+  grid-template-rows: 1fr; /* Target state: open */
+}
+
+.accordion-content {
+  min-height: 0;
+  opacity: 0;
+  /* Fade in the text slightly after the expansion starts to avoid clutter */
+  transition: opacity 0.3s ease;
+  padding-bottom: 20px; 
+}
+
+.accordion-item.open .accordion-content {
+  opacity: 1;
+  transition-delay: 0.1s; 
+}
+
+/* --- Icon Transition --- */
+.accordion-icon {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+    .stat-block {
+      padding: 24px;
+      background: var(--bg);
+    }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--text);
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-3);
+      letter-spacing: 0.04em;
+    }
+    .skills-col { }
+    .skill-group { margin-bottom: 36px; }
+    .skill-group-label {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 14px;
+    }
+    .skill-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .skill-pill {
+      font-size: 13px; font-weight: 400;
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      color: var(--text-2);
+      background: var(--bg);
+    }
+    .about-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(48px, 6vw, 80px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  color: var(--text);
+  margin-bottom: 80px;
+}
+.about-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+    /* ── Footer ── */
+    footer {
+  border-top: 1px solid var(--border);
+  padding: 64px 48px;
+}
+.footer-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 48px; align-items: start;
+}
+.footer-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 16px;
+}
+.footer-col { display: flex; flex-direction: column; gap: 10px; }
+.footer-col a {
+  font-size: 15px; color: var(--text-2);
+  text-decoration: none; transition: color 0.15s;
+}
+.footer-col a:hover { color: var(--text); }
+.footer-copy {
+  font-size: 13px; color: var(--text-3);
+  line-height: 1.7; text-align: right;
+  align-self: flex-end;
+}
+.footer-col a {
+  font-size: 15px; color: var(--text-2);
+  text-decoration: none; transition: color 0.15s;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.footer-col a .arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.footer-col a:hover .arrow {
+  transform: translate(2px, -2px);
+}
+
+    /* ── Reveal ── */
+    .reveal {
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-d1 { transition-delay: 0.08s; }
+    .reveal-d2 { transition-delay: 0.16s; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim-1 { opacity: 0; animation: fadeUp 0.7s ease 0.05s forwards; }
+    .anim-2 { opacity: 0; animation: fadeUp 0.7s ease 0.15s forwards; }
+    .anim-3 { opacity: 0; animation: fadeUp 0.7s ease 0.25s forwards; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-name">Si-Xian Li</a>
+    <ul class="nav-links">
+      <li><a href="#work">Work</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="cv.pdf" target="_blank">CV</a></li>
+    </ul>
+  </nav>
+
+  <!-- Intro -->
+  <div class="intro-wrap">
+    <div class="intro">
+      <h1 class="intro-title anim-2">
+        Complexity,<br>clarified.
+      </h1>
+      <div class="intro-row anim-3">
+        <p class="intro-sub">
+          I'm a Geography student at NTU.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Work -->
+  <div class="work" id="work">
+    <div class="work-header reveal">
+      <span class="work-title">Selected Work</span>
+    </div>
+
+    <div class="project-list">
+      <!-- Finding -->
+      <a href="finding.html" class="project-row reveal reverse">
+        <div class="project-left">
+          <div class="project-index">01 — Full-Stack + Redesign</div>
+          <div class="project-name">Finding</div>
+          <p class="project-desc">
+            A mood-based place discovery app — find spots that match how you feel,
+            not just what you're looking for. Built full-stack and redesigned
+            from prototype to product.
+          </p>
+          <div class="project-tags">
+            <span class="p-tag">FastAPI</span>
+            <span class="p-tag">Cloud Run</span>
+            <span class="p-tag">Leaflet</span>
+          </div>
+          <span class="project-cta">
+            View case study
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+        <div class="project-visual">
+          <div class="vis-inner vis-finding" style="background:#F5F2EE;">
+            <style>
+              @keyframes fBlob1{0%,100%{transform:translate(0,0)}33%{transform:translate(16px,-10px)}66%{transform:translate(-9px,7px)}}
+              @keyframes fBlob2{0%,100%{transform:translate(0,0)}33%{transform:translate(-14px,13px)}66%{transform:translate(9px,-9px)}}
+              @keyframes fBlob3{0%,100%{transform:translate(0,0)}33%{transform:translate(8px,9px)}66%{transform:translate(-12px,-6px)}}
+              @keyframes fVibe{0%{opacity:0;transform:translateY(8px)}6%{opacity:1;transform:translateY(0)}14%{opacity:1;transform:translateY(0)}20%,100%{opacity:0;transform:translateY(-6px)}}
+              .fb1{animation:fBlob1 9s ease-in-out infinite}
+              .fb2{animation:fBlob2 9s ease-in-out infinite;animation-delay:-3s}
+              .fb3{animation:fBlob3 9s ease-in-out infinite;animation-delay:-6s}
+              .fvw1{animation:fVibe 12s ease-in-out infinite 0s;opacity:0}
+              .fvw2{animation:fVibe 12s ease-in-out infinite 2s;opacity:0}
+              .fvw3{animation:fVibe 12s ease-in-out infinite 4s;opacity:0}
+              .fvw4{animation:fVibe 12s ease-in-out infinite 6s;opacity:0}
+              .fvw5{animation:fVibe 12s ease-in-out infinite 8s;opacity:0}
+              .fvw6{animation:fVibe 12s ease-in-out infinite 10s;opacity:0}
+            </style>
+            <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 480 320" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="fglow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="28"/></filter>
+                <filter id="fglow2" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="22"/></filter>
+              </defs>
+              <rect width="480" height="320" fill="#F5F2EE"/>
+              <g class="fb1"><circle cx="138" cy="128" r="96" fill="#C6D8F2" filter="url(#fglow)" opacity="0.65"/></g>
+              <g class="fb2"><circle cx="318" cy="182" r="106" fill="#F2CDD6" filter="url(#fglow)" opacity="0.58"/></g>
+              <g class="fb3"><circle cx="228" cy="248" r="84" fill="#C6E0D0" filter="url(#fglow2)" opacity="0.52"/></g>
+              <g class="fvw1"><text x="240" y="158" font-family="Syne,sans-serif" font-size="44" font-weight="800" fill="#111110" text-anchor="middle" letter-spacing="-0.03em">STUDY</text></g>
+              <g class="fvw2"><text x="240" y="158" font-family="Syne,sans-serif" font-size="44" font-weight="800" fill="#111110" text-anchor="middle" letter-spacing="-0.03em">DATE</text></g>
+              <g class="fvw3"><text x="240" y="158" font-family="Syne,sans-serif" font-size="44" font-weight="800" fill="#111110" text-anchor="middle" letter-spacing="-0.03em">QUIET</text></g>
+              <g class="fvw4"><text x="240" y="158" font-family="Syne,sans-serif" font-size="38" font-weight="800" fill="#111110" text-anchor="middle" letter-spacing="-0.03em">AESTHETIC</text></g>
+              <g class="fvw5"><text x="240" y="158" font-family="Syne,sans-serif" font-size="38" font-weight="800" fill="#111110" text-anchor="middle" letter-spacing="-0.03em">MEETING</text></g>
+              <g class="fvw6"><text x="240" y="158" font-family="Syne,sans-serif" font-size="36" font-weight="800" fill="#111110" text-anchor="middle" letter-spacing="-0.03em">LATE NIGHT</text></g>
+              <text x="240" y="182" font-family="DM Sans,sans-serif" font-size="11" fill="#B0A898" text-anchor="middle" letter-spacing="0.06em">mood-based discovery</text>
+            </svg>
+          </div>
+        </div>
+      </a>
+
+      <!-- ChemPion -->
+      <a href="chempion.html" class="project-row reveal reveal-d2">
+        <div class="project-left">
+          <div class="project-index">02 — UI Design</div>
+          <div class="project-name">ChemPion</div>
+          <p class="project-desc">
+            Redesigning a lab chemical inventory system from Jupyter notebook
+            to a data-dense visual dashboard — accessible to the entire lab,
+            not just the developer.
+          </p>
+          <div class="project-tags">
+            <span class="p-tag">Dashboard</span>
+            <span class="p-tag">Data Viz</span>
+            <span class="p-tag">UI Design</span>
+          </div>
+          <span class="project-cta">
+            View case study
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+        <div class="project-visual">
+          <div class="vis-inner vis-chempion" style="background:#F4F4F2;">
+            <style>
+              @keyframes gIn{0%{opacity:0;transform:scale(0.6)}100%{opacity:1;transform:scale(1)}}
+              @keyframes gPulse{0%,100%{opacity:1}50%{opacity:0.5}}
+              @keyframes gScan{0%{transform:translateY(-320px)}100%{transform:translateY(320px)}}
+              @keyframes gCount{0%,100%{opacity:0}15%,85%{opacity:1}}
+            </style>
+            <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 480 320" xmlns="http://www.w3.org/2000/svg">
+              <defs><clipPath id="gridClip"><rect width="480" height="320"/></clipPath></defs>
+              <rect width="480" height="320" fill="#F4F4F2"/>
+              <!-- Row 1 -->
+              <rect x="52"  y="52"  width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards .1s"/>
+              <rect x="102" y="52"  width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards .18s"/>
+              <rect x="152" y="52"  width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards .26s"/>
+              <rect x="202" y="52"  width="38" height="38" rx="6" fill="#D97706" opacity="0" style="animation:gIn .3s ease forwards .34s,gPulse 2s ease-in-out infinite 1.5s"/>
+              <rect x="252" y="52"  width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards .42s"/>
+              <rect x="302" y="52"  width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards .5s"/>
+              <rect x="352" y="52"  width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards .58s"/>
+              <rect x="402" y="52"  width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards .66s"/>
+              <!-- Row 2 -->
+              <rect x="52"  y="102" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards .74s"/>
+              <rect x="102" y="102" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards .82s"/>
+              <rect x="152" y="102" width="38" height="38" rx="6" fill="#DC2626" opacity="0" style="animation:gIn .3s ease forwards .9s,gPulse 1.2s ease-in-out infinite 1.8s"/>
+              <rect x="202" y="102" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards .98s"/>
+              <rect x="252" y="102" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 1.06s"/>
+              <rect x="302" y="102" width="38" height="38" rx="6" fill="#D97706" opacity="0" style="animation:gIn .3s ease forwards 1.14s,gPulse 2s ease-in-out infinite 1.5s"/>
+              <rect x="352" y="102" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 1.22s"/>
+              <rect x="402" y="102" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 1.3s"/>
+              <!-- Row 3 -->
+              <rect x="52"  y="152" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 1.38s"/>
+              <rect x="102" y="152" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 1.46s"/>
+              <rect x="152" y="152" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 1.54s"/>
+              <rect x="202" y="152" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 1.62s"/>
+              <rect x="252" y="152" width="38" height="38" rx="6" fill="#DC2626" opacity="0" style="animation:gIn .3s ease forwards 1.7s,gPulse 1.2s ease-in-out infinite 2s"/>
+              <rect x="302" y="152" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 1.78s"/>
+              <rect x="352" y="152" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 1.86s"/>
+              <rect x="402" y="152" width="38" height="38" rx="6" fill="#D97706" opacity="0" style="animation:gIn .3s ease forwards 1.94s,gPulse 2s ease-in-out infinite 1.5s"/>
+              <!-- Row 4 -->
+              <rect x="52"  y="202" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 2.02s"/>
+              <rect x="102" y="202" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 2.1s"/>
+              <rect x="152" y="202" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 2.18s"/>
+              <rect x="202" y="202" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 2.26s"/>
+              <rect x="252" y="202" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 2.34s"/>
+              <rect x="302" y="202" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 2.42s"/>
+              <rect x="352" y="202" width="38" height="38" rx="6" fill="#DC2626" opacity="0" style="animation:gIn .3s ease forwards 2.5s,gPulse 1.2s ease-in-out infinite 2.2s"/>
+              <rect x="402" y="202" width="38" height="38" rx="6" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 2.58s"/>
+              <!-- Scan line -->
+              <g clip-path="url(#gridClip)">
+                <rect x="0" y="0" width="480" height="3" fill="rgba(45,122,79,0.15)" style="animation:gScan 3s linear infinite 2.8s"/>
+              </g>
+              <!-- Legend -->
+              <rect x="52" y="268" width="10" height="10" rx="2" fill="#2D7A4F" opacity="0" style="animation:gIn .3s ease forwards 2.8s"/>
+              <text x="68" y="277" font-family="DM Sans,sans-serif" font-size="9" fill="#6B6B67" opacity="0" style="animation:gIn .3s ease forwards 2.8s">In stock</text>
+              <rect x="140" y="268" width="10" height="10" rx="2" fill="#D97706" opacity="0" style="animation:gIn .3s ease forwards 2.9s"/>
+              <text x="156" y="277" font-family="DM Sans,sans-serif" font-size="9" fill="#6B6B67" opacity="0" style="animation:gIn .3s ease forwards 2.9s">Expiring</text>
+              <rect x="230" y="268" width="10" height="10" rx="2" fill="#DC2626" opacity="0" style="animation:gIn .3s ease forwards 3s"/>
+              <text x="246" y="277" font-family="DM Sans,sans-serif" font-size="9" fill="#6B6B67" opacity="0" style="animation:gIn .3s ease forwards 3s">Out of stock</text>
+              <text x="428" y="277" font-family="Syne,sans-serif" font-size="11" font-weight="700" fill="#111110" text-anchor="end" opacity="0" style="animation:gCount 4s ease infinite 3s">47 items</text>
+            </svg>
+          </div>
+        </div>
+      </a>
+
+      <!-- Smangus -->
+      <a href="smangus.html" class="project-row reveal reveal-d2 reverse">
+        <div class="project-left">
+          <div class="project-index">03 — Spatial Design</div>
+          <div class="project-name">Smangus<br>Historical Atlas</div>
+          <p class="project-desc">
+            Transforming 100 years of Atayal indigenous spatial records
+            into an interactive, layered web atlas for Academia Sinica.
+          </p>
+          <div class="project-tags">
+            <span class="p-tag">QGIS</span>
+            <span class="p-tag">Python</span>
+            <span class="p-tag">Folium</span>
+          </div>
+          <span class="project-cta">
+            View case study
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        </div>
+        <div class="project-visual">
+          <div class="vis-inner vis-smangus" style="background:#EDE8E0;">
+            <style>
+              @keyframes sCDrift{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+              @keyframes sRDraw{0%{stroke-dashoffset:680;opacity:0}8%{stroke-dashoffset:680;opacity:1}58%{stroke-dashoffset:0;opacity:1}80%{stroke-dashoffset:0;opacity:1}93%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:680;opacity:0}}
+              @keyframes sPLoop{0%,30%{transform:scale(0);opacity:0}42%,80%{transform:scale(1);opacity:1}93%,100%{transform:scale(0.5);opacity:0}}
+              @keyframes sLFade{0%,42%{opacity:0;transform:translateY(4px)}55%,80%{opacity:1;transform:translateY(0)}92%,100%{opacity:0;transform:translateY(-3px)}}
+              @keyframes sRipple{0%{r:8px;opacity:0.4}100%{r:24px;opacity:0}}
+              .scg1{animation:sCDrift 7s ease-in-out infinite}
+              .scg2{animation:sCDrift 7s ease-in-out infinite;animation-delay:-2.3s}
+              .scg3{animation:sCDrift 7s ease-in-out infinite;animation-delay:-4.6s}
+              .srp{stroke-dasharray:680;animation:sRDraw 6s cubic-bezier(.4,0,.2,1) infinite}
+              .spp1{transform-origin:148px 172px;animation:sPLoop 6s ease-in-out infinite .85s}
+              .spp2{transform-origin:205px 142px;animation:sPLoop 6s ease-in-out infinite 1.3s}
+              .spp3{transform-origin:262px 116px;animation:sPLoop 6s ease-in-out infinite 1.75s}
+              .spp4{transform-origin:320px 92px;animation:sPLoop 6s ease-in-out infinite 2.2s}
+              .sml{animation:sLFade 6s ease-in-out infinite 2.7s;opacity:0}
+              .srwave{animation:sRipple 1.4s ease-out infinite 3.2s}
+            </style>
+            <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 480 320" xmlns="http://www.w3.org/2000/svg">
+              <rect width="480" height="320" fill="#EDE8E0"/>
+              <line x1="120" y1="0" x2="120" y2="320" stroke="#D4CEC6" stroke-width="0.5" opacity="0.6"/>
+              <line x1="240" y1="0" x2="240" y2="320" stroke="#D4CEC6" stroke-width="0.5" opacity="0.6"/>
+              <line x1="360" y1="0" x2="360" y2="320" stroke="#D4CEC6" stroke-width="0.5" opacity="0.6"/>
+              <line x1="0" y1="107" x2="480" y2="107" stroke="#D4CEC6" stroke-width="0.5" opacity="0.6"/>
+              <line x1="0" y1="213" x2="480" y2="213" stroke="#D4CEC6" stroke-width="0.5" opacity="0.6"/>
+              <g class="scg1">
+                <path d="M-20,272 Q80,252 180,262 Q280,272 370,252 Q430,238 500,250" fill="none" stroke="#C4BCB0" stroke-width="1.2"/>
+                <path d="M-20,250 Q80,230 180,240 Q280,250 370,228 Q430,214 500,226" fill="none" stroke="#C4BCB0" stroke-width="1.1"/>
+                <path d="M-20,228 Q80,206 180,216 Q280,226 370,204 Q430,188 500,202" fill="none" stroke="#BEB6AA" stroke-width="1"/>
+              </g>
+              <g class="scg2">
+                <path d="M-20,202 Q80,180 180,190 Q280,200 370,176 Q430,160 500,174" fill="none" stroke="#B8B0A4" stroke-width="0.9"/>
+                <path d="M-20,178 Q100,154 200,164 Q300,174 380,150 Q430,134 500,148" fill="none" stroke="#B0A89C" stroke-width="0.8"/>
+                <path d="M-20,154 Q100,128 210,140 Q310,152 390,124 Q435,108 500,120" fill="none" stroke="#A8A094" stroke-width="0.7"/>
+              </g>
+              <g class="scg3">
+                <path d="M20,128 Q120,102 230,114 Q330,126 410,98 Q448,82 500,94" fill="none" stroke="#A09890" stroke-width="0.7"/>
+                <path d="M60,104 Q160,78 270,90 Q360,100 425,74 Q458,60 500,70" fill="none" stroke="#988E86" stroke-width="0.6"/>
+                <path d="M100,80 Q200,56 310,68 Q390,78 440,52 Q464,40 500,48" fill="none" stroke="#8E857C" stroke-width="0.5"/>
+              </g>
+                <path class="srp" d="M100,280 C112,255 125,218 148,172 C172,138 194,126 205,142 C220,162 242,130 262,116 C285,104 305,96 320,92" fill="none" stroke="#1847B0" stroke-width="2.5" opacity="0.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <g class="spp1">
+                <circle cx="148" cy="172" r="5" fill="#1847B0"/>
+                <circle cx="148" cy="172" r="10" fill="none" stroke="#1847B0" stroke-width="1" opacity="0.25"/>
+                <circle class="srwave" cx="148" cy="172" r="8" fill="none" stroke="#1847B0" stroke-width="1.5"/>
+              </g>
+                <g class="spp2"><circle cx="205" cy="142" r="4" fill="#1847B0" opacity="0.85"/><circle cx="205" cy="142" r="8" fill="none" stroke="#1847B0" stroke-width="1" opacity="0.25"/></g>
+                <g class="spp3"><circle cx="262" cy="116" r="4" fill="#1847B0" opacity="0.85"/><circle cx="262" cy="116" r="8" fill="none" stroke="#1847B0" stroke-width="1" opacity="0.25"/></g>
+                <g class="spp4"><circle cx="320" cy="92" r="6" fill="#1847B0"/><circle cx="320" cy="92" r="12" fill="none" stroke="#1847B0" stroke-width="1.5" opacity="0.25"/></g>
+              <g class="sml">
+                <rect x="332" y="68" width="80" height="20" rx="10" fill="white" opacity="0.92"/>
+                <text x="372" y="82" font-family="DM Sans,sans-serif" font-size="9" font-weight="600" fill="#1847B0" text-anchor="middle" letter-spacing="0.04em">SMANGUS</text>
+              </g>
+            <text x="22" y="308" font-family="DM Sans,sans-serif" font-size="10" fill="#9E9890" letter-spacing="0.1em">ATAYAL MIGRATION</text>
+          </svg>
+        </div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+<div class="about" id="about">
+  <div class="about-inner">
+    <div class="about-header reveal">
+      <p class="about-tagline">Building at the intersection of data and design.</p>
+      <h2 class="about-name">- Si-Xian Li</h2>
+      <p class="about-intro">Geography student at NTU. I'm passionate about making complex, layered information legible — spatial systems, data dashboards, and full-stack applications.</p>
+    </div>
+    
+    <div class="about-accordion reveal">
+      <div class="accordion-item" onclick="toggleAccordion(this)">
+        <div class="accordion-header">
+          <span class="accordion-title">Background</span>
+          <span class="accordion-icon">+</span>
+        </div>
+        <div class="accordion-body">
+          <div class="accordion-content">
+            <p>I’ve always been intrigued by how people interact with information. My journey in Geography taught me that a well-designed map is essentially a user interface for the physical world. I carry this perspective into Data Analytics, where I treat every visualization as a design challenge. To me, UI/UX is the common thread: the art of transforming complex datasets into seamless, intuitive experiences.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item" onclick="toggleAccordion(this)">
+        <div class="accordion-header">
+          <span class="accordion-title">Skills</span>
+          <span class="accordion-icon">+</span>
+        </div>
+        <div class="accordion-body">
+          <div class="accordion-content">
+            <p>Design — Figma, Information Design, Data Visualization, Spatial Storytelling</p>
+            <p style="margin-top:10px;">Development — Python, HTML / CSS / JS, FastAPI, Streamlit, GitHub Pages</p>
+            <p style="margin-top:10px;">Data — R, Folium, Tableau, SQL</p>
+            <p style="margin-top:10px;">Spatial Analysis — QGIS, ArcGIS</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item" onclick="toggleAccordion(this)">
+        <div class="accordion-header">
+          <span class="accordion-title">Things I love</span>
+          <span class="accordion-icon">+</span>
+        </div>
+        <div class="accordion-body">
+          <div class="accordion-content">
+            <p>I draw inspiration from the dynamic energy of life. I’m a competitive runner on the NTU Track and Field team, specializing in the 400m and 800m—events that require both strategic pacing and grit. I’m also a huge NBA fan. To balance the intensity of sports, I enjoy solo traveling; the freedom of exploring new places independently allows me to recharge and gain fresh perspectives.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-col">
+      <div class="footer-label">Work</div>
+      <a href="finding.html">Finding <span class="arrow">↗</span></a>
+      <a href="chempion.html">ChemPion <span class="arrow">↗</span></a>
+      <a href="smangus.html">Smangus Historical Atlas <span class="arrow">↗</span></a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-label">Contact</div>
+      <a href="https://github.com/lsxx20" target="_blank">GitHub <span class="arrow">↗</span></a>
+      <a href="cv.pdf" target="_blank">Read CV <span class="arrow">↗</span></a>
+      <a href="mailto:b13208013@ntu.edu.tw">Mail <span class="arrow">↗</span></a>
+    </div>
+    <div class="footer-copy">
+      <span>© 2026 Si-Xian Li.<br>All Rights Reserved.</span>
+    </div>
+  </div>
+</footer>
+
+  <script>
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.08 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+<script>
+function toggleAccordion(item) {
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.accordion-item.open').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+</script>
+</body>
+</html>

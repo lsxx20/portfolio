@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M6 14 Q16 26 26 14' fill='none' stroke='%230051CC' stroke-width='3' stroke-linecap='round'/></svg>">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChemPion — Si-Xian Li</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F4F4F4; 
+      --bg-card: #F0F0EC; 
+      --bg-tertiary: #EBEBED;
+      --text: #111110;
+      --text-2: #2A2A27;
+      --text-3: #444441;
+      --border: #C8C8C2; 
+      --border-light: #EEEEEA;
+      --accent: #0051CC; 
+      --accent-light: rgba(0,81,204,0.07);
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 16px;  font-weight: 300; line-height: 1.85; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; z-index: 100; background: rgba(244,244,242,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+    .nav-back { font-size: 13px; font-weight: 500; color: var(--text-2); text-decoration: none; transition: color 0.15s; }
+    .nav-back:hover { color: var(--text); }
+    .nav-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+    .nav-pill { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); background: var(--accent-light); border: 1px solid rgba(0,81,204,0.15); padding: 4px 12px; border-radius: 100px; }
+    .cs-hero { padding: 140px 48px 80px; max-width: 1200px; margin: 0 auto; }
+    .cs-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+    .meta-badge { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); border: 1px solid var(--border); padding: 4px 12px; border-radius: 100px; }
+    .meta-badge.highlight { color: var(--accent); background: var(--accent-light); border-color: rgba(0,81,204,0.15); }
+    .meta-sep { color: var(--border); }
+    .cs-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(48px, 6vw, 80px); font-weight: 600; letter-spacing: -0.01em; line-height: 1.0; margin-bottom: 24px; }
+    .cs-subtitle { font-size: 18px; color: var(--text-2); line-height: 1.7; max-width: 640px; margin-bottom: 56px; }
+    .cs-info-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--border); }
+    .cs-info-item { background: var(--bg-card); padding: 20px 24px; }
+    .cs-info-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+    .cs-info-value { font-size: 14px; color: var(--text); font-weight: 500; }
+    .cs-section { max-width: 1200px; margin: 0 auto; padding: 80px 48px; border-top: 1px solid var(--border); }
+    .cs-section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+    .cs-section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(32px, 3vw, 48px); font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; margin-bottom: 20px; }
+    .cs-body { font-size: 17px; color: var(--text-2); line-height: 1.8; max-width: 680px; margin-bottom: 20px; }
+    .cs-hero-wrap {min-height: 100vh;display: flex;flex-direction: column;justify-content: center;border-bottom: 1px solid var(--border);}
+    .problem-list { display: flex; flex-direction: column; gap: 8px; margin-top: 28px; max-width: 760px; }
+    .problem-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; }
+    .problem-num { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; color: var(--text-3); flex-shrink: 0; padding-top: 1px; }
+    .problem-text { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+    .problem-text strong { color: var(--text); font-weight: 600; }
+    .demo-section { max-width: 1200px; margin: 0 auto; padding: 80px 48px; border-top: 1px solid var(--border); }
+    .demo-frame { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.08); }
+    .demo-frame iframe { width: 100%; height: 640px; border: none; display: block; }
+    .demo-caption { margin-top: 12px; font-size: 13px; color: var(--text-3); text-align: center; font-style: italic; }
+    .decision-row { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; padding: 48px 0; border-top: 1px solid var(--border); }
+    .decision-row:first-of-type { border-top: none; }
+    .decision-num { font-family: 'Syne', sans-serif; font-size: 56px; font-weight: 800; letter-spacing: -0.04em; color: var(--border); line-height: 1; margin-bottom: 12px; }
+    .decision-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 12px; }
+    .decision-text { font-size: 15px; color: var(--text-2); line-height: 1.7; margin-bottom: 16px; }
+    .decision-highlight { font-size: 15px; color: var(--text); line-height: 1.7; padding: 16px 20px; background: var(--accent-light); border-left: 2px solid var(--accent); border-radius: 0 8px 8px 0; }
+    .code-block { padding: 16px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; font-family: monospace; font-size: 13px; color: var(--text-2); line-height: 1.8; margin-bottom: 12px; }
+    .result-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin: 40px 0; }
+    .result-stat { padding: 32px 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; text-align: center; }
+    .result-stat-num { font-family: 'Syne', sans-serif; font-size: 44px; font-weight: 800; letter-spacing: -0.03em; color: var(--text); margin-bottom: 6px; }
+    .result-stat-label { font-size: 13px; color: var(--text-3); line-height: 1.5; }
+    .project-nav { border-top: 1px solid var(--border); padding: 56px 48px; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
+    .project-nav a { text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 4px; }
+    .project-nav-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+    .project-nav-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; transition: color 0.15s; }
+    .project-nav a:hover .project-nav-title { color: var(--accent); }
+    footer { border-top: 1px solid var(--border); padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; }
+    .footer-l { font-size: 13px; color: var(--text-3); }
+    .footer-r { display: flex; gap: 32px; }
+    .footer-r a { font-size: 13px; color: var(--text-2); text-decoration: none; transition: color 0.15s; }
+    .footer-r a:hover { color: var(--text); }
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="nav-back">← All work</a>
+    <span class="nav-title">ChemPion</span>
+    <div class="nav-pill">UI Design</div>
+  </nav>
+
+<div class="cs-hero-wrap">
+  <div class="cs-hero">
+    <div class="cs-meta">
+      <span class="meta-badge highlight">03 — UI Design</span>
+      <span class="meta-sep">·</span>
+      <span class="meta-sep">·</span>
+      <span class="meta-badge">2025</span>
+    </div>
+    <h1 class="cs-title">ChemPion</h1>
+    <p class="cs-subtitle">Redesigning a Jupyter notebook-based chemical inventory system into a data-dense, production-grade lab management dashboard.</p>
+    <div class="cs-info-grid">
+      <div class="cs-info-item"><div class="cs-info-label">Role</div><div class="cs-info-value">UI Designer & Developer</div></div>
+      <div class="cs-info-item"><div class="cs-info-label">Tools</div><div class="cs-info-value">HTML · CSS · JavaScript</div></div>
+      <div class="cs-info-item"><div class="cs-info-label">Deliverable</div><div class="cs-info-value">Interactive Dashboard Prototype</div></div>
+      <div class="cs-info-item"><div class="cs-info-label">Context</div><div class="cs-info-value">NTU Course Project</div></div>
+    </div>
+  </div>
+</div>
+
+  <section class="cs-section">
+    <p class="cs-section-label">The Problem</p>
+    <h2 class="cs-section-title">A tool built for one person<br>used by an entire lab.</h2>
+    <p class="cs-body">ChemPion started as a Jupyter notebook system for tracking chemical inventory. Functional for a developer, but inaccessible for lab staff who needed to check stock levels at a glance without running Python. The data was all there. The interface just wasn't designed for humans.</p>
+    <div class="problem-list reveal">
+      <div class="problem-item"><div class="problem-num">01</div><div class="problem-text"><strong>No at-a-glance overview.</strong> Checking stock required running a cell and reading raw output. Critical alerts were buried in code.</div></div>
+      <div class="problem-item"><div class="problem-num">02</div><div class="problem-text"><strong>No visual hierarchy.</strong> All data was treated equally — a chemical running out looked identical to one with years of shelf life.</div></div>
+      <div class="problem-item"><div class="problem-num">03</div><div class="problem-text"><strong>No actions from the interface.</strong> Adding a chemical, recording a dispense, or exporting required editing code directly.</div></div>
+    </div>
+  </section>
+
+  <section class="demo-section reveal">
+    <p class="cs-section-label">Live Demo — Redesigned Dashboard</p>
+    <h2 class="cs-section-title">The redesign, fully interactive.</h2>
+    <p class="cs-body">Five sections — inventory, cost tracking, alerts, usage analytics, CSV export. Everything accessible without writing a single line of code.<br><br><span style="font-size:14px;color:var(--text-3)">Try the sidebar, search, filters, and the Add Chemical form.</span></p>
+    <div class="demo-frame">
+      <iframe src="chempion-mockup-v3.html" title="ChemPion Dashboard"></iframe>
+    </div>
+    <p class="demo-caption">ChemPion — interactive dashboard prototype.</p>
+  </section>
+
+  <section class="cs-section">
+    <p class="cs-section-label">Design Thinking</p>
+    <h2 class="cs-section-title" style="margin-bottom:48px;">Three decisions that shaped the redesign.</h2>
+
+    <div class="decision-row reveal">
+      <div>
+        <div class="decision-num">01</div>
+        <h3 class="decision-title">Status as a first-class citizen</h3>
+        <p class="decision-text">Every chemical has a status — in stock, expiring soon, or low/out of stock. In the original system, this required reading a date and mentally computing urgency.</p>
+        <div class="decision-highlight">Color-coded pills communicate urgency before you read a single word — matching how lab staff actually scan a shelf.</div>
+      </div>
+      <div>
+        <div class="decision-num">02</div>
+        <h3 class="decision-title">Overview before detail</h3>
+        <p class="decision-text">The dashboard opens on four KPI cards — total chemicals, total value, expiring soon, low stock. The numbers that matter most are visible immediately.</p>
+        <div class="decision-highlight">Most inventory checks are "is anything wrong?" The dashboard answers that in under a second, then lets you drill down if needed.</div>
+      </div>
+    </div>
+
+    <div class="decision-row reveal">
+      <div>
+        <div class="decision-num">03</div>
+        <h3 class="decision-title">Actions in the interface</h3>
+        <p class="decision-text">Adding a chemical, filtering by status, searching, exporting to CSV — all done through the UI without touching code.</p>
+        <div class="decision-highlight">A tool is only useful if the people who need it can actually use it. Separating the interface from the implementation means lab staff can work independently.</div>
+      </div>
+      <div style="padding-top:80px;">
+        <div class="code-block">df.loc[len(df)] = [<br>&nbsp;&nbsp;"Ethanol", "C₂H₅OH",<br>&nbsp;&nbsp;"Organic", 5, "L", 450,<br>&nbsp;&nbsp;"2026-08-15"<br>]</div>
+        <div style="padding:16px 20px;background:var(--accent-light);border:1px solid rgba(0,81,204,0.15);border-radius:10px;">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">After</div>
+          <div style="font-size:14px;color:var(--text);line-height:1.6;">Click <strong>+ Add Chemical</strong> → fill the form → done.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cs-section">
+    <p class="cs-section-label">Result</p>
+    <h2 class="cs-section-title">From notebook to dashboard.</h2>
+    <p class="cs-body">The redesigned ChemPion makes the same data accessible to everyone in the lab — not just the person who wrote the code. Five fully functional sections, real-time filtering and search, and form-based workflows for all common actions.</p>
+    <div class="result-stats reveal">
+      <div class="result-stat"><div class="result-stat-num">5</div><div class="result-stat-label">Functional sections in the dashboard</div></div>
+      <div class="result-stat"><div class="result-stat-num">0</div><div class="result-stat-label">Lines of code needed by lab staff</div></div>
+      <div class="result-stat"><div class="result-stat-num">CSV</div><div class="result-stat-label">One-click export of full inventory</div></div>
+    </div>
+  </section>
+
+  <div class="project-nav">
+    <a href="finding.html"><span class="project-nav-label">← Previous</span><span class="project-nav-title">Finding</span></a>
+    <a href="smangus.html" style="text-align:right;"><span class="project-nav-label">Next →</span><span class="project-nav-title">Smangus Historical Atlas</span></a>
+  </div>
+
+  <footer>
+    <span class="footer-l">Si-Xian Li © 2026</span>
+    <div class="footer-r"><a href="mailto:b13208013@ntu.edu.tw">b13208013@ntu.edu.tw</a><a href="https://github.com/lsxx20" target="_blank">GitHub</a></div>
+  </footer>
+
+  <script>
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }); }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
