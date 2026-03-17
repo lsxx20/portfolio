@@ -263,6 +263,26 @@
     const reveals = document.querySelectorAll('.reveal');
     const observer = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }); }, { threshold: 0.1 });
     reveals.forEach(el => observer.observe(el));
+    /* ── New: Click to Copy Email Logic ── */
+function copyEmail(element) {
+  const email = 'b13208013@ntu.edu.tw'; // Your NTU email
+  
+  navigator.clipboard.writeText(email).then(() => {
+    const mailText = element.querySelector('.mail-text');
+    const originalText = mailText.innerText;
+    
+    // Provide visual feedback
+    mailText.innerText = 'Email Copied!';
+    
+    // Reset back to original text after 2 seconds
+    setTimeout(() => {
+      mailText.innerText = originalText;
+    }, 2000);
+  }).catch(err => {
+    // Fallback: if copy fails, attempt to open mail client
+    window.location.href = "mailto:" + email;
+  });
+}
   </script>
 </body>
 </html>
