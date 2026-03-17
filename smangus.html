@@ -83,19 +83,52 @@
     .result-stat-num { font-family: 'Syne', sans-serif; font-size: 44px; font-weight: 800; letter-spacing: -0.03em; color: var(--text); margin-bottom: 6px; }
     .result-stat-label { font-size: 13px; color: var(--text-3); line-height: 1.5; }
 
+        /* ── Footer ── */
+    footer {
+  border-top: 1px solid var(--border);
+  padding: 64px 48px;
+}
+.footer-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 48px; align-items: start;
+}
+.footer-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 16px;
+}
+.footer-col { display: flex; flex-direction: column; gap: 10px; }
+.footer-col a {
+  font-size: 15px; color: var(--text-2);
+  text-decoration: none; transition: color 0.15s;
+}
+.footer-col a:hover { color: var(--text); }
+.footer-copy {
+  font-size: 13px; color: var(--text-3);
+  line-height: 1.7; text-align: right;
+  align-self: flex-end;
+}
+.footer-col a {
+  font-size: 15px; color: var(--text-2);
+  text-decoration: none; transition: color 0.15s;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.footer-col a .arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.footer-col a:hover .arrow {
+  transform: translate(2px, -2px);
+}
+
+
     /* Project nav */
     .project-nav { border-top: 1px solid var(--border); padding: 56px 48px; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
     .project-nav a { text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 4px; }
     .project-nav-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
     .project-nav-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; transition: color 0.15s; }
     .project-nav a:hover .project-nav-title { color: var(--accent); }
-
-    footer { border-top: 1px solid var(--border); padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; }
-    .footer-l { font-size: 13px; color: var(--text-3); }
-    .footer-r { display: flex; gap: 32px; }
-    .footer-r a { font-size: 13px; color: var(--text-2); text-decoration: none; transition: color 0.15s; }
-    .footer-r a:hover { color: var(--text); }
-
     .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
     .reveal.visible { opacity: 1; transform: translateY(0); }
   </style>
@@ -206,10 +239,25 @@
     <a href="index.html" style="text-align:right;"><span class="project-nav-label">Back to</span><span class="project-nav-title">All work</span></a>
   </div>
 
-  <footer>
-    <span class="footer-l">Si-Xian Li © 2026</span>
-    <div class="footer-r"><a href="mailto:b13208013@ntu.edu.tw">b13208013@ntu.edu.tw</a><a href="https://github.com/lsxx20" target="_blank">GitHub</a></div>
-  </footer>
+<footer>
+  <div class="footer-inner">
+    <div class="footer-col">
+      <div class="footer-label">Work</div>
+      <a href="finding.html">Finding <span class="arrow">↗</span></a>
+      <a href="chempion.html">ChemPion <span class="arrow">↗</span></a>
+      <a href="smangus.html">Smangus<span class="arrow">↗</span></a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-label">Contact</div>
+      <a href="https://github.com/lsxx20" target="_blank">GitHub <span class="arrow">↗</span></a>
+      <a href="https://linkedin.com/in/si-xian-li-145304334" target="_blank">LinkedIn <span class="arrow">↗</span></a>
+      <a href="javascript:void(0)" onclick="copyEmail(this)" style="cursor: copy;"><span class="mail-text">Mail</span> <span class="arrow">↗</span></a>
+    </div>
+    <div class="footer-copy">
+      <span>© 2026 Si-Xian Li.<br>All Rights Reserved.</span>
+    </div>
+  </div>
+</footer>
 
   <script>
     const reveals = document.querySelectorAll('.reveal');
