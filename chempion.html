@@ -25,7 +25,9 @@
     html { scroll-behavior: smooth; }
     body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 16px;  font-weight: 300; line-height: 1.85; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
     nav { position: fixed; top: 0; left: 0; right: 0; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; z-index: 100; background: rgba(244,244,242,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
-    .nav-back { font-size: 13px; font-weight: 500; color: var(--text-2); text-decoration: none; transition: color 0.15s; }
+    .nav-name {display: flex;align-items: center;text-decoration: none;}
+    .nav-logo-svg {height: 28px; width: auto;transition: transform 0.2s ease;}
+    .nav-name:hover .nav-logo-svg {transform: translateY(2px);}
     .nav-back:hover { color: var(--text); }
     .nav-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
     .nav-pill { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); background: var(--accent-light); border: 1px solid rgba(0,81,204,0.15); padding: 4px 12px; border-radius: 100px; }
@@ -81,7 +83,7 @@
 </head>
 <body>
   <nav>
-    <a href="index.html" class="nav-back">← All work</a>
+    <a href="index.html" class="nav-name"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="nav-logo-svg"><path d="M6 14 Q16 26 26 14" fill="none" stroke="#0051CC" stroke-width="3" stroke-linecap="round"/></svg></a>
     <span class="nav-title">ChemPion</span>
     <div class="nav-pill">UI Design</div>
   </nav>
@@ -175,7 +177,7 @@
 
   <div class="project-nav">
     <a href="finding.html"><span class="project-nav-label">← Previous</span><span class="project-nav-title">Finding</span></a>
-    <a href="smangus.html" style="text-align:right;"><span class="project-nav-label">Next →</span><span class="project-nav-title">Smangus Historical Atlas</span></a>
+    <a href="smangus.html" style="text-align:right;"><span class="project-nav-label">Next →</span><span class="project-nav-title">Smangus</span></a>
   </div>
 
   <footer>

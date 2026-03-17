@@ -9,7 +9,7 @@
   <title>Si-Xian Design</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -47,11 +47,24 @@
       border-bottom: 1px solid var(--border);
     }
     .nav-name {
-      font-family: 'Syne', sans-serif;
-      font-weight: 700; font-size: 15px;
-      letter-spacing: -0.02em; color: var(--text);
-      text-decoration: none;
-    }
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  /* Removed text-related styles: font-family, font-weight, etc. */
+}
+
+/* Style to control the SVG icon size */
+.nav-logo-svg {
+  /* Adjust height to fit your navbar (60px height) */
+  height: 28px; 
+  width: auto;
+  transition: transform 0.2s ease;
+}
+
+/* Subtle interaction: icon moves slightly on hover */
+.nav-name:hover .nav-logo-svg {
+  transform: translateY(2px);
+}
     .nav-links { display: flex; gap: 40px; list-style: none; }
     .nav-links a {
       font-size: 13px; font-weight: 500;
@@ -70,24 +83,49 @@
       border-bottom: 1px solid var(--border);
     }
     .intro {
-      padding: 0 48px;
-      max-width: 1100px; margin: 0 auto; width: 100%;
-      flex: 1;
-      display: flex; flex-direction: column; justify-content: center;
-    }
+  padding: 0 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Change from flex-start to center */
+  align-items: center; 
+}
     .intro-label {
       font-size: 12px; font-weight: 500;
       letter-spacing: 0.12em; text-transform: uppercase;
       color: var(--text-3); margin-bottom: 24px;
     }
     .intro-title {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(52px, 7vw, 96px);
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      line-height: 0.95;
-      color: var(--text);
-      margin-bottom: 80px;
+      /* Use Inter font for a modern, high-end look */
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+      /* Increased font size for maximum impact */
+      font-size: clamp(48px, 8vw, 110px); 
+  
+      /* Use Bold (700) to match the "Built to go places" thickness */
+      font-weight: 700; 
+  
+      /* Tight letter spacing is key to this aesthetic */
+      letter-spacing: -0.03em; 
+  
+      /* Prevent text wrapping to keep it on one line */
+      white-space: nowrap; 
+  
+      /* --- Text Gradient Magic --- */
+      /* Colors adjusted to match your reference image: Dark Navy to Dusty Blue */
+      background: linear-gradient(90deg, #05263B 0%, #517C9C 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+      /* --------------------------- */
+
+      text-align: center;
+      margin-bottom: 70px;
     }
     .intro-title em {
       font-style: normal;
@@ -102,11 +140,18 @@
       margin-left: 16px;
     }
     .intro-sub {
-    font-size: 18px;
-    font-weight: 300;
-    line-height: 1.85;
-    color: var(--text-2);
-    }
+  font-family: 'Inter', sans-serif;
+  /* Slightly larger font size as requested */
+  font-size: 20px; 
+  letter-spacing: -0.0375em;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text-3);
+  text-align: center;
+  /* Force uppercase if you want it to look exactly like your reference image */
+  text-transform: uppercase; 
+  margin: 0 auto;
+}
 
     /* ── Divider ── */
     .divider {
@@ -163,15 +208,15 @@
 
     .project-left { }
     .project-index {
-      font-family: 'Syne', sans-serif;
-      font-size: 11px; font-weight: 700;
-      letter-spacing: 0.12em; text-transform: uppercase;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
       color: var(--text-3); margin-bottom: 16px;
     }
     .project-name {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(45px, 5vw, 65px);
-      font-weight: 600;
+      font-family:'Cormorant Garamond', serif;
+      font-size: clamp(40px, 4vw, 64px);
+      font-weight: 700;
       letter-spacing: -0.01em;
       line-height: 1.1;
       margin-bottom: 20px;
@@ -179,6 +224,7 @@
     }
     .project-row:hover .project-name { color: var(--accent); }
     .project-desc {
+      font-family: 'Inter', sans-serif;
       font-size: 16px;
       font-weight: 300;
       line-height: 1.85;
@@ -187,6 +233,7 @@
     }
     .project-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
     .p-tag {
+      font-family: 'Inter', sans-serif;
       font-size: 11px; font-weight: 500;
       letter-spacing: 0.06em; text-transform: uppercase;
       color: var(--text-3);
@@ -196,6 +243,7 @@
       background: var(--bg);
     }
     .project-cta {
+      font-family: 'Inter', sans-serif;
       display: inline-flex; align-items: center; gap: 8px;
       font-size: 13px; font-weight: 600;
       color: var(--accent); letter-spacing: 0.02em;
@@ -271,7 +319,7 @@
   color: var(--text);
 }
 .about-intro {
-  font-size: 17px; color: var(--text-2);
+  font-size: 18px; color: var(--text-2);
   line-height: 1.8; margin-bottom: 72px;
 }
 .accordion-item {
@@ -286,7 +334,7 @@
 }
 .accordion-item:hover .accordion-header { color: var(--text); }
 .accordion-title {
-  font-size: 16px; font-weight: 400; color: var(--text);
+  font-size: 18px; font-weight: 400; color: var(--text);
 }
 .accordion-icon {
   font-size: 20px; color: var(--text-3);
@@ -312,6 +360,7 @@
 .accordion-content {
   min-height: 0;
   opacity: 0;
+  font-size: 17px;
   /* Fade in the text slightly after the expansion starts to avoid clutter */
   transition: opacity 0.3s ease;
   padding-bottom: 20px; 
@@ -359,16 +408,17 @@
       background: var(--bg);
     }
     .about-tagline {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(48px, 6vw, 80px);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
-  color: var(--text);
-  margin-bottom: 80px;
-}
+      /* Transition from Serif to clean Sans-serif for consistency */
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: clamp(40px, 5vw,60px);
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 50px;
+    }
 .about-name {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 18px;
   font-weight: 700;
   color: var(--text);
@@ -436,23 +486,27 @@
 <body>
 
   <nav>
-    <a href="index.html" class="nav-name">Si-Xian Li</a>
-    <ul class="nav-links">
-      <li><a href="#work">Work</a></li>
-      <li><a href="#about">About</a></li>
-      <li><a href="cv.pdf" target="_blank">CV</a></li>
-    </ul>
-  </nav>
+  <a href="index.html" class="nav-name">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="nav-logo-svg">
+      <path d="M6 14 Q16 26 26 14" fill="none" stroke="#0051CC" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#work">Work</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="cv.pdf" target="_blank">CV</a></li>
+  </ul>
+</nav>
 
   <!-- Intro -->
   <div class="intro-wrap">
     <div class="intro">
       <h1 class="intro-title anim-2">
-        Complexity,<br>clarified.
+        Complexity, clarified.
       </h1>
       <div class="intro-row anim-3">
         <p class="intro-sub">
-          I'm a Geography student at NTU.
+          SI-XIAN, LI
         </p>
       </div>
     </div>
@@ -611,7 +665,7 @@
       <a href="smangus.html" class="project-row reveal reveal-d2 reverse">
         <div class="project-left">
           <div class="project-index">03 — Spatial Design</div>
-          <div class="project-name">Smangus<br>Historical Atlas</div>
+          <div class="project-name">Smangus</div>
           <p class="project-desc">
             Transforming 100 years of Atayal indigenous spatial records
             into an interactive, layered web atlas for Academia Sinica.
@@ -745,13 +799,13 @@
       <div class="footer-label">Work</div>
       <a href="finding.html">Finding <span class="arrow">↗</span></a>
       <a href="chempion.html">ChemPion <span class="arrow">↗</span></a>
-      <a href="smangus.html">Smangus Historical Atlas <span class="arrow">↗</span></a>
+      <a href="smangus.html">Smangus<span class="arrow">↗</span></a>
     </div>
     <div class="footer-col">
       <div class="footer-label">Contact</div>
       <a href="https://github.com/lsxx20" target="_blank">GitHub <span class="arrow">↗</span></a>
       <a href="cv.pdf" target="_blank">Read CV <span class="arrow">↗</span></a>
-      <a href="mailto:b13208013@ntu.edu.tw">Mail <span class="arrow">↗</span></a>
+      <a href="javascript:void(0)" onclick="copyEmail(this)" style="cursor: copy;"><span class="mail-text">Mail</span> <span class="arrow">↗</span></a>
     </div>
     <div class="footer-copy">
       <span>© 2026 Si-Xian Li.<br>All Rights Reserved.</span>
@@ -760,17 +814,39 @@
 </footer>
 
   <script>
-    const reveals = document.querySelectorAll('.reveal');
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-    }, { threshold: 0.08 });
-    reveals.forEach(el => observer.observe(el));
-  </script>
-<script>
+    /* ── Existing Scroll Reveal Logic ── */
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+reveals.forEach(el => observer.observe(el));
+
+/* ── Existing Accordion Logic ── */
 function toggleAccordion(item) {
   const isOpen = item.classList.contains('open');
   document.querySelectorAll('.accordion-item.open').forEach(i => i.classList.remove('open'));
   if (!isOpen) item.classList.add('open');
+}
+
+/* ── New: Click to Copy Email Logic ── */
+function copyEmail(element) {
+  const email = 'b13208013@ntu.edu.tw'; // Your NTU email
+  
+  navigator.clipboard.writeText(email).then(() => {
+    const mailText = element.querySelector('.mail-text');
+    const originalText = mailText.innerText;
+    
+    // Provide visual feedback
+    mailText.innerText = 'Email Copied!';
+    
+    // Reset back to original text after 2 seconds
+    setTimeout(() => {
+      mailText.innerText = originalText;
+    }, 2000);
+  }).catch(err => {
+    // Fallback: if copy fails, attempt to open mail client
+    window.location.href = "mailto:" + email;
+  });
 }
 </script>
 </body>

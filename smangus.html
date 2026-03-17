@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smangus Historical Atlas — Si-Xian Li</title>
+  <title>Smangus — Si-Xian Li</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M6 14 Q16 26 26 14' fill='none' stroke='%230051CC' stroke-width='3' stroke-linecap='round'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -27,7 +27,9 @@
 
     /* Nav */
     nav { position: fixed; top: 0; left: 0; right: 0; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 48px; z-index: 100; background: rgba(244,244,242,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
-    .nav-back { font-size: 13px; font-weight: 500; color: var(--text-2); text-decoration: none; display: flex; align-items: center; gap: 8px; transition: color 0.15s; }
+    .nav-name {display: flex;align-items: center;text-decoration: none;}
+    .nav-logo-svg {height: 28px; width: auto;transition: transform 0.2s ease;}
+    .nav-name:hover .nav-logo-svg {transform: translateY(2px);}
     .nav-back:hover { color: var(--text); }
     .nav-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
     .nav-right { display: flex; gap: 24px; align-items: center; }
@@ -100,11 +102,10 @@
 </head>
 <body>
   <nav>
-    <a href="index.html" class="nav-back">← All work</a>
-    <span class="nav-title">Smangus Historical Atlas</span>
+    <a href="index.html" class="nav-name"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="nav-logo-svg"><path d="M6 14 Q16 26 26 14" fill="none" stroke="#0051CC" stroke-width="3" stroke-linecap="round"/></svg></a>
+    <span class="nav-title">Smangus</span>
     <div class="nav-right">
       <span class="nav-pill">Spatial Design</span>
-      <a href="https://lsxx20.github.io/mybook2/intro.html" target="_blank">Live site →</a>
     </div>
   </nav>
 
@@ -117,7 +118,7 @@
       <span class="meta-sep">·</span>
       <span class="meta-badge">Jul – Aug 2025</span>
     </div>
-    <h1 class="cs-title">Smangus<br>Historical Atlas</h1>
+    <h1 class="cs-title">Smangus</h1>
     <p class="cs-subtitle">Bringing a century of Atayal indigenous spatial history to life — transforming static archival records into an interactive, layered web experience.</p>
     <div class="cs-info-grid">
       <div class="cs-info-item"><div class="cs-info-label">Role</div><div class="cs-info-value">Solo Researcher & Designer</div></div>
