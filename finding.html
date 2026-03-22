@@ -172,19 +172,19 @@
 
     <!-- Highlight 1 -->
     <div class="highlight-block reveal">
-      <p class="highlight-label">Highlight 01</p>
-      <h2 class="highlight-title">Mood as the search query</h2>
-      <p class="highlight-body">Six vibe modes — Study, Date, Quiet & Relax, Work & Meeting, Aesthetic, Late Night — each backed by a scoring model that reads real review text and ranks places by how well they match the feeling, not just the category.</p>
+      <p class="highlight-label">Design Decision 01</p>
+      <h2 class="highlight-title">Mood as the primary input — not a filter</h2>
+      <p class="highlight-body">Most place-search tools treat mood as an afterthought — a filter you apply after searching. In Finding, selecting a vibe is the first action. The six modes (Study, Date, Quiet & Relax, Work & Meeting, Aesthetic, Late Night) are presented as large, tappable items rather than a dropdown, because the whole point of the app is choosing how you feel first.</p>
       <div class="highlight-insight">
-        <p>The algorithm scores each place by counting keyword hits from curated vibe dictionaries against the venue's actual Google reviews — in both English and Traditional Chinese.</p>
+        <p>The original prototype buried vibe selection in a dropdown. Testing with early users showed they often missed it entirely — the core feature was invisible. Promoting it to a visible, prominent list made the app's purpose immediately clear.</p>
       </div>
     </div>
 
     <!-- Highlight 2 -->
     <div class="highlight-block reveal">
-      <p class="highlight-label">Highlight 02</p>
-      <h2 class="highlight-title">From score to story</h2>
-      <p class="highlight-body">Instead of showing a raw vibe score (24.796), the app surfaces what reviewers actually said. Keyword tags and quoted sentences replace the algorithm's math with something humans understand.</p>
+      <p class="highlight-label">Design Decision 02</p>
+      <h2 class="highlight-title">Show the reason, not the score</h2>
+      <p class="highlight-body">The algorithm produces a numeric vibe score for each place. But showing "vibeScore: 24.796" tells the user nothing. The design decision was to surface the actual review quotes and keyword tags that generated the score — so users can judge for themselves whether a place feels right.</p>
       <div class="highlight-2col">
         <div>
           <p style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;">Before</p>
@@ -206,11 +206,11 @@
 
     <!-- Highlight 3 -->
     <div class="highlight-block reveal">
-      <p class="highlight-label">Highlight 03</p>
-      <h2 class="highlight-title">Map pins that speak</h2>
-      <p class="highlight-body">Generic red dots replaced with labeled bubbles showing rank and name. Clicking a card highlights the corresponding pin — and vice versa. The map and the list are the same thing.</p>
+      <p class="highlight-label">Design Decision 03</p>
+      <h2 class="highlight-title">Map and list as one linked system</h2>
+      <p class="highlight-body">In the original prototype, the map and the result list were visually separate — generic red pins with no connection to the ranked cards below. The redesign treats them as one system: each pin shows its rank and name, clicking a card pans the map, and clicking a pin scrolls to its card. The user never has to mentally match two disconnected views.</p>
       <div class="highlight-insight">
-        <p>Ranking is spatial information. A map where pin #1 looks identical to pin #5 is a missed opportunity to communicate what the algorithm already knows.</p>
+        <p>This decision came from observing how people actually used the prototype: they would find a place in the list, then squint at the map trying to figure out which pin it was. Linking the two removed that friction entirely.</p>
       </div>
     </div>
 

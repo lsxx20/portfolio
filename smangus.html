@@ -173,18 +173,18 @@
     <div class="highlight-block reveal">
       <p class="highlight-label">Design Decision 01</p>
       <h2 class="highlight-title">The map is the interface — not a decoration</h2>
-      <p class="highlight-body">Every design choice was made to serve exploration, not to illustrate. Markers are clustered at meaningful geographic scales. Labels appear only on interaction. The 1924 colonial basemap is not a background — it's evidence.</p>
+      <p class="highlight-body">Early explorations considered a text-heavy, article-style layout with embedded static maps. But discussions with researchers at Academia Sinica made clear that spatial relationships are the primary information — not supplementary illustration. The atlas was restructured to make the interactive map the central interface, with text serving as annotation rather than narrative.</p>
       <div class="highlight-insight">
-        <p>A static map of Atayal migration would show positions. An interactive map shows relationships — between time, terrain, and movement. The difference is whether the reader understands, or just sees.</p>
+        <p>Markers are clustered at meaningful geographic scales and labels appear only on interaction — reducing visual noise for researchers who need to compare settlement positions across the two basemaps.</p>
       </div>
     </div>
 
     <div class="highlight-block reveal">
       <p class="highlight-label">Design Decision 02</p>
-      <h2 class="highlight-title">Temporal depth through basemap toggle</h2>
-      <p class="highlight-body">Overlaying the same spatial data on both a modern OSM basemap and the 1924 Japanese colonial survey map lets users see how the recorded landscape has shifted. Same locations, different documentation — a century apart.</p>
+      <h2 class="highlight-title">Basemap toggle as a research tool</h2>
+      <p class="highlight-body">The ability to toggle between a modern OSM basemap and the 1924 Japanese colonial survey map was not originally planned. It was added after realizing that overlaying the same settlement data on both maps reveals how colonial documentation shaped — and sometimes distorted — the spatial record. For academic users, this toggle is the most valuable feature: it turns a visualization into a tool for critical analysis.</p>
       <div class="highlight-insight">
-        <p>The toggle is not a UI feature. It's an argument: that the way we map a place changes what we think we know about it.</p>
+        <p>For general audiences, the toggle provides a tangible sense of temporal change. For researchers, it enables direct comparison of cartographic sources — same coordinates, different interpretations of the landscape.</p>
       </div>
     </div>
 
@@ -196,6 +196,18 @@
     <h2 class="cs-section-title">What this project is about.</h2>
     <p class="cs-body">Smangus (司馬庫斯) is an Atayal village in Hsinchu County. Its history exists across scattered colonial survey maps, migration records, and field notes — disconnected, inaccessible to most people, and never visualized together.</p>
     <p class="cs-body">This project was built during a summer internship at Academia Sinica's Geographic Information System Center. The goal was to georeference Japanese colonial-era maps, process the spatial datasets, and build an interactive atlas that makes a century of indigenous history genuinely explorable.</p>
+  </section>
+
+  <!-- TARGET USERS -->
+  <section class="cs-section reveal">
+    <p class="cs-section-label">Target Users</p>
+    <h2 class="cs-section-title">Who this atlas serves — and how that shaped the design.</h2>
+    <p class="cs-body">The atlas was designed for two distinct audiences, each with different needs. Understanding these users directly shaped the information architecture.</p>
+    <div class="problem-list">
+      <div class="problem-item"><div class="problem-num">01</div><div class="problem-text"><strong>Academic researchers</strong> at Academia Sinica who need to cross-reference spatial records with archival sources. They require precise geographic coordinates, basemap switching for source comparison, and the ability to inspect individual settlement data. For them, the colonial-era basemap is a primary source — not a decorative background.</div></div>
+      <div class="problem-item"><div class="problem-num">02</div><div class="problem-text"><strong>Students and the general public</strong> interested in indigenous history but unfamiliar with GIS tools. They need a guided, explorable experience — not raw data. For them, the 3D terrain model and the migration route visualization provide spatial context that a flat map cannot.</div></div>
+    </div>
+    <p class="cs-body" style="margin-top:24px;">This dual audience led to a key design decision: three separate map layers with increasing complexity. The migration route offers a narrative entry point for general audiences, the colonial settlement map enables detailed academic comparison, and the 3D terrain provides physical context for both groups.</p>
   </section>
 
   <!-- RESULT -->

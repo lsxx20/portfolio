@@ -151,19 +151,19 @@
 
     <!-- Highlight 1 -->
     <div class="highlight-block reveal">
-      <p class="highlight-label">Highlight 01</p>
+      <p class="highlight-label">Design Decision 01</p>
       <h2 class="highlight-title">Status as the first thing you see</h2>
-      <p class="highlight-body">Every chemical in the inventory carries a status — in stock, expiring soon, or out of stock. Color-coded pills make urgency readable before you process a single number. Green, amber, red: the shelf-scan logic, digitized.</p>
+      <p class="highlight-body">When I observed how lab staff actually checked inventory, their first question was never "show me everything" — it was "is anything wrong?" This led to the decision to make status the dominant visual element. Color-coded pills (green, amber, red) let users scan urgency before reading a single number.</p>
       <div class="highlight-insight">
-        <p>Most inventory checks are not "show me everything." They're "is anything wrong?" The dashboard answers that in under a second — then lets you drill down.</p>
+        <p>The color system mirrors how researchers physically scan shelves — checking labels for expiry dates and low quantities. The dashboard digitizes that same instinct.</p>
       </div>
     </div>
 
     <!-- Highlight 2 -->
     <div class="highlight-block reveal">
-      <p class="highlight-label">Highlight 02</p>
+      <p class="highlight-label">Design Decision 02</p>
       <h2 class="highlight-title">Actions in the interface, not in the code</h2>
-      <p class="highlight-body">Adding a chemical used to mean editing a Python file. Now it's a form. The entire workflow — add, search, filter, export — happens through the UI. Lab staff can manage inventory independently.</p>
+      <p class="highlight-body">The original system required Python knowledge to add or update chemicals. But the people who manage inventory day-to-day are lab assistants and graduate students — not developers. The redesign replaced every code-level action with a form-based UI, removing the technical barrier entirely.</p>
       <div class="highlight-2col">
         <div class="compare-block before">
           <p class="compare-label">Before — to add a chemical</p>
@@ -182,15 +182,28 @@
 
     <!-- Highlight 3 -->
     <div class="highlight-block reveal">
-      <p class="highlight-label">Highlight 03</p>
-      <h2 class="highlight-title">Four numbers that tell the whole story</h2>
-      <p class="highlight-body">The dashboard opens on four KPI cards — total chemicals, total value, expiring soon, low stock. These four numbers answer the question every lab manager actually asks when they open an inventory system.</p>
+      <p class="highlight-label">Design Decision 03</p>
+      <h2 class="highlight-title">Four numbers that answer the real question</h2>
+      <p class="highlight-body">The dashboard opens with four KPI cards: total chemicals, total value, expiring soon, and low stock. This layout was chosen because conversations with lab members revealed that their inventory check always starts with the same question: "do I need to order anything?" Four cards answer that without scrolling.</p>
       <div class="highlight-insight">
-        <p>Data density is not the goal. The goal is the fastest path from "I opened the app" to "I know what needs my attention." Four cards get you there.</p>
+        <p>Earlier iterations showed six or eight metrics. Reducing to four forced prioritization — only the numbers that drive action made the cut.</p>
       </div>
     </div>
 
   </div>
+
+  <!-- DESIGN PROCESS -->
+  <section class="cs-section reveal">
+    <p class="cs-section-label">Design Process</p>
+    <h2 class="cs-section-title">How I got from notebook to dashboard.</h2>
+    <p class="cs-body">The design started by mapping the existing workflow: how lab members currently check stock, what triggers a reorder, and where the Jupyter notebook breaks down. Three patterns emerged from these conversations.</p>
+    <div class="problem-list">
+      <div class="problem-item"><div class="problem-num">01</div><div class="problem-text"><strong>Scan first, detail second.</strong> People glance at the overview before drilling into specifics. The layout needed a clear hierarchy — summary on top, table below.</div></div>
+      <div class="problem-item"><div class="problem-num">02</div><div class="problem-text"><strong>Alerts beat data.</strong> Knowing that 3 chemicals are out of stock matters more than knowing the lab has 47 chemicals total. Urgency needed to be visually dominant.</div></div>
+      <div class="problem-item"><div class="problem-num">03</div><div class="problem-text"><strong>One screen, not five tabs.</strong> Lab staff check inventory between experiments — they need fast answers, not navigation. The sidebar groups everything into one scrollable flow.</div></div>
+    </div>
+    <p class="cs-body" style="margin-top:24px;">These patterns informed the layout: KPI cards at the top for instant status, a filterable table for detail, and a persistent sidebar for switching between views without losing context.</p>
+  </section>
 
   <!-- THE PROBLEM -->
   <section class="cs-section reveal">
