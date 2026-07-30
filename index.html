@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#FFFFFF">
-<title>NBA Salary Valuation — Si-Xian Li</title>
-<meta name="description" content="An XGBoost + SHAP read on 898 NBA player-seasons: what each contract pays, what the model sees, and why.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M1 15L15 1' stroke='%232438B8' stroke-width='1.8'/%3E%3Ccircle cx='5' cy='6' r='2' fill='%23141414'/%3E%3Ccircle cx='11' cy='9' r='2' fill='%232438B8'/%3E%3C/svg%3E">
+<title>Si-Xian Li — Geography × Spatial Data Science</title>
+<meta name="description" content="Si-Xian Li (李思憲) — Geography undergraduate at National Taiwan University working on GeoAI, geospatial text mining, and interactive maps.">
+<meta property="og:title" content="Si-Xian Li — Geography × Spatial Data Science">
+<meta property="og:description" content="GeoAI, geospatial text mining, and interactive maps. Research across three labs in Taiwan.">
+<meta property="og:url" content="https://sixianli.com">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='3.2' fill='none' stroke='%232438B8' stroke-width='1.6'/%3E%3Cpath d='M8 0v3.4M8 12.6V16M0 8h3.4M12.6 8H16' stroke='%232438B8' stroke-width='1.6'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..600&display=swap" rel="stylesheet">
@@ -16,537 +19,314 @@
     --ink: #141414;
     --muted: #575C61;
     --soft: #B9BDC1;
-    --line: #DCE0E3;
     --blue: #2438B8;
-    --blue-soft: rgba(36, 56, 184, 0.08);
-    --gray-bar: #9AA0A6;
-    --num: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
   }
 
   ::selection { background: rgba(36, 56, 184, 0.14); }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; interpolate-size: allow-keywords; }
 
   body {
     background: var(--paper);
     color: var(--ink);
     font-family: 'Newsreader', Georgia, serif;
-    font-size: 17.5px;
-    line-height: 1.6;
+    font-size: 19px;
+    line-height: 1.7;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    opacity: 0;
+    animation: page 0.7s ease 0.05s forwards;
   }
+  @keyframes page { to { opacity: 1; } }
 
-  a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-decoration-color: var(--soft); text-underline-offset: 3px; transition: color .25s, text-decoration-color .25s; }
-  a:hover { color: var(--blue); text-decoration-color: var(--blue); }
-  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 1px; }
-
-  .num { font-family: var(--num); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
-
-  /* ---------- header ---------- */
-  header { padding: 64px 0 8px; }
-  .kicker { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
-  h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 600; letter-spacing: -0.015em; line-height: 1.08; max-width: 16em; }
-  .dek { max-width: 46em; color: #40464C; margin-top: 18px; font-size: 1.02em; }
-  .dek strong { font-weight: 600; color: var(--ink); }
-
-  /* ---------- controls ---------- */
-  .controls { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; margin: 30px 0 10px; }
-  .search { position: relative; }
-  .search input {
-    font-family: 'Newsreader', Georgia, serif;
-    font-size: 1rem;
+  a {
     color: var(--ink);
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 2px;
-    padding: 9px 12px;
-    width: min(340px, 78vw);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--soft);
+    text-underline-offset: 3px;
+    transition: color 0.25s ease, text-decoration-color 0.25s ease;
   }
-  .search input::placeholder { color: var(--soft); font-style: italic; }
-  .seasons { display: flex; flex-wrap: wrap; gap: 4px; }
-  .seasons button {
-    font-family: var(--num);
-    font-variant-numeric: tabular-nums;
+  a:hover { color: var(--blue); text-decoration-color: var(--blue); }
+  a:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 1px; }
+
+  .page {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: clamp(112px, 19vh, 200px) 24px 144px;
+  }
+
+  /* ---------- masthead ---------- */
+  .eyebrow {
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: clamp(2.7rem, 8vw, 4rem);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
+  }
+  h1 .zh {
+    font-weight: 400;
+    color: var(--muted);
+    font-size: 0.48em;
+    margin-left: 14px;
+    letter-spacing: 0.04em;
+  }
+
+  .intro {
+    margin-top: 56px;
+    font-size: 1.06em;
+  }
+  .links {
+    margin-top: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    font-size: 0.98rem;
+  }
+
+  /* ---------- sections ---------- */
+  section { margin-top: clamp(116px, 17vh, 176px); }
+  .label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 46px;
+  }
+
+  .item { margin-top: 54px; }
+  .item:first-of-type { margin-top: 0; }
+  .item h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
+  .item h2 .org { font-weight: 400; color: var(--muted); }
+  .item .meta {
+    font-size: 0.88rem;
+    letter-spacing: 0.015em;
+    color: var(--muted);
+    margin: 7px 0 13px;
+  }
+  .item p { max-width: 60ch; }
+
+  /* read more */
+  details.more { margin-top: 12px; }
+  details.more summary {
+    list-style: none;
+    display: inline-block;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--blue);
+    transition: color 0.25s ease;
+  }
+  details.more summary::-webkit-details-marker { display: none; }
+  details.more summary::before { content: "+ "; font-style: normal; }
+  details.more[open] summary::before { content: "\2212 "; }
+  details.more summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+  details.more::details-content {
+    height: 0;
+    overflow: clip;
+    transition: height 0.35s ease, content-visibility 0.35s allow-discrete;
+  }
+  details.more[open]::details-content { height: auto; }
+  details.more .body { margin-top: 14px; color: #40464C; }
+  details.more .body p + p { margin-top: 12px; }
+
+  /* figure slots — for future screenshots */
+  figure.fig { margin: 26px 0 6px; }
+  figure.fig img { width: 100%; height: auto; display: block; }
+  figure.fig figcaption {
     font-size: 0.8rem;
     color: var(--muted);
-    background: none;
-    border: 1px solid transparent;
-    border-radius: 2px;
-    padding: 6px 9px;
-    cursor: pointer;
-    transition: color .2s, border-color .2s, background .2s;
+    margin-top: 10px;
   }
-  .seasons button:hover { color: var(--blue); }
-  .seasons button.on { color: var(--blue); border-color: var(--blue); background: var(--blue-soft); }
 
-  /* ---------- layout ---------- */
-  .board { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 36px; align-items: start; padding: 8px 0 24px; }
+  /* ---------- tools ---------- */
+  .tools { font-size: 1rem; line-height: 1.95; }
+  .tools .k { font-weight: 500; color: var(--muted); }
 
-  /* ---------- scatter ---------- */
-  #chart { position: relative; }
-  #chart svg { display: block; width: 100%; height: auto; }
-  .axis text { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--muted); }
-  .axis line, .axis path { stroke: var(--line); }
-  .axis-title { font-family: 'Newsreader', Georgia, serif; font-style: italic; font-size: 13px; fill: var(--muted); }
-  .parity { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 5 4; opacity: 0.55; }
-  .parity-label { font-family: 'Newsreader', Georgia, serif; font-style: italic; font-size: 13px; fill: var(--ink); opacity: 0.75; }
-  .zone-label { font-family: 'Newsreader', Georgia, serif; font-style: italic; font-size: 12.5px; fill: var(--soft); }
-  .dot { fill: var(--ink); opacity: 0.28; transition: opacity .2s; cursor: pointer; }
-  .dot.dim { opacity: 0.08; }
-  .dot.sel { fill: var(--blue); opacity: 1; }
-  .halo { fill: none; stroke: var(--blue); stroke-width: 1.2; opacity: 0.9; }
-
-  .tip {
-    position: absolute;
-    pointer-events: none;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    box-shadow: 0 2px 10px rgba(20,20,20,0.06);
-    padding: 8px 11px;
+  /* ---------- contact / colophon ---------- */
+  .aside { font-style: italic; color: var(--muted); margin-top: 22px; }
+  .colophon {
+    margin-top: 100px;
     font-size: 0.82rem;
-    line-height: 1.45;
-    max-width: 230px;
-    opacity: 0;
-    transition: opacity .15s;
-    z-index: 5;
-  }
-  .tip .t-name { font-weight: 600; }
-  .tip .t-line { color: var(--muted); font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 0.78rem; }
-
-  /* ---------- detail card ---------- */
-  .card { border: 1px solid var(--line); border-radius: 2px; padding: 24px 24px 22px; position: sticky; top: 20px; }
-  .card .c-season { font-family: var(--num); font-size: 0.78rem; color: var(--muted); letter-spacing: 0.04em; }
-  .card h2 { font-size: 1.55rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; margin: 2px 0 2px; }
-  .card .c-meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 18px; }
-
-  .figures { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 6px; }
-  .fig-label { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-  .fig-label.model { color: var(--blue); }
-  .fig-value { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 1.5rem; font-weight: 650; letter-spacing: -0.02em; margin-top: 2px; }
-  .fig-sub { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 0.76rem; color: var(--muted); }
-
-  .gauge { margin: 14px 0 6px; }
-  .gauge svg { display: block; width: 100%; height: 34px; }
-  .verdict { font-size: 0.95rem; color: #40464C; margin: 10px 0 20px; }
-  .verdict strong { color: var(--ink); }
-
-  .split-title, .factors-title { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 18px 0 10px; }
-  .split-row { display: grid; grid-template-columns: 96px 1fr auto; gap: 10px; align-items: center; font-size: 0.86rem; margin-bottom: 7px; }
-  .split-row .s-label { color: var(--muted); }
-  .split-row .s-bar { height: 8px; background: var(--line); border-radius: 1px; position: relative; overflow: hidden; }
-  .split-row .s-fill { position: absolute; top: 0; bottom: 0; left: 0; }
-  .split-row .s-val { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 0.8rem; }
-
-  .factors svg { display: block; width: 100%; }
-  .f-label { font-family: 'Newsreader', Georgia, serif; font-size: 12.5px; fill: var(--ink); }
-  .f-val { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 10.5px; fill: var(--muted); }
-  .f-axis { stroke: var(--line); }
-  .factors-note { font-size: 0.78rem; color: var(--soft); font-style: italic; margin-top: 8px; }
-
-  /* ---------- ledger ---------- */
-  .ledger { padding: 40px 0 24px; border-top: 1px solid var(--line); margin-top: 16px; }
-  .ledger-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 22px; margin-bottom: 18px; }
-  .ledger h3 { font-size: 1.3rem; font-weight: 600; letter-spacing: -0.01em; }
-  .toggle { display: flex; gap: 4px; }
-  .toggle button {
-    font-family: 'Newsreader', Georgia, serif;
-    font-size: 0.92rem;
     color: var(--muted);
-    background: none;
-    border: 1px solid transparent;
-    border-radius: 2px;
-    padding: 5px 11px;
-    cursor: pointer;
-    transition: color .2s, border-color .2s, background .2s;
-  }
-  .toggle button:hover { color: var(--blue); }
-  .toggle button.on { color: var(--blue); border-color: var(--blue); background: var(--blue-soft); }
-
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); }
-  th.r, td.r { text-align: right; }
-  td { padding: 9px 10px; border-bottom: 1px solid var(--line); font-size: 0.95rem; }
-  td.num-cell { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 0.86rem; }
-  td .gap-pos { color: var(--blue); }
-  td .gap-neg { color: var(--muted); }
-  tbody tr { cursor: pointer; transition: background .15s; }
-  tbody tr:hover { background: var(--blue-soft); }
-  td.player-cell { font-weight: 500; }
-  td .yr-tag { color: var(--muted); font-family: var(--num); font-size: 0.8rem; margin-left: 7px; }
-
-  /* ---------- footer ---------- */
-  footer { border-top: 1px solid var(--line); margin-top: 28px; padding: 36px 0 72px; color: var(--muted); font-size: 0.9rem; }
-  footer .method { max-width: 62ch; }
-  footer .sig { margin-top: 22px; font-size: 0.85rem; }
-
-  /* ---------- states ---------- */
-  #loading { padding: 80px 0; color: var(--muted); font-style: italic; }
-  #error { display: none; padding: 40px 0; color: var(--muted); max-width: 50ch; }
-
-  /* ---------- responsive ---------- */
-  @media (max-width: 880px) {
-    .board { grid-template-columns: 1fr; }
-    .card { position: static; }
-    header { padding-top: 44px; }
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 24px;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .dot, .tip, .seasons button, .toggle button, tbody tr, a { transition: none; }
+  /* ---------- small screens ---------- */
+  @media (max-width: 560px) {
+    body { font-size: 18px; }
+    .page { padding-top: 88px; }
+  }
+
+  /* ---------- print ---------- */
+  @media print {
+    body { animation: none; opacity: 1; font-size: 11pt; }
+    .page { padding: 0; max-width: none; }
+    a { color: #000; text-decoration-color: #000; }
+  }
+
+  /* ---------- static states: print & reduced motion ---------- */
+  @media print, (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    body { animation: none; opacity: 1; }
+    details.more::details-content { transition: none; }
   }
 </style>
 </head>
 <body>
 
-<div class="wrap">
+<div class="page">
 
-  <header>
-    <p class="kicker">A machine-learning valuation · 2017–2024</p>
-    <h1>What should every NBA contract pay?</h1>
-    <p class="dek">An XGBoost model prices <strong>898 player-seasons</strong> as a share of the salary cap — <span class="num">R² = 0.799</span> on a strict time split — and SHAP splits each valuation into <strong>basketball skill</strong> and <strong>market context</strong>. The dashed line is fair pay: dots above it earn less than the model sees, dots below earn more.</p>
+  <header class="masthead">
+    <p class="eyebrow">Taipei, Taiwan</p>
+    <h1>Si-Xian Li<span class="zh">李思憲</span></h1>
   </header>
 
-  <p id="loading">Loading the ledger…</p>
-  <div id="error">The data file couldn’t load. If you opened this page directly from disk, run a local server first — <span class="num">python3 -m http.server</span> — or view it on the deployed site.</div>
 
-  <main id="app" style="display:none">
+  <p class="intro">Cities leave traces in unlikely places — forum arguments, search histories, bus timetables, century-old survey maps. I turn those traces into spatial evidence of how cities are actually lived and contested. Geography undergraduate at National Taiwan University; research assistant in three labs — at NTU, Academia Sinica, and the National Science and Technology Council.</p>
 
-    <div class="controls">
-      <div class="search">
-        <input id="q" list="players" placeholder="Find a player — try Tyrese Maxey" aria-label="Find a player">
-        <datalist id="players"></datalist>
-      </div>
-      <div class="seasons" id="seasons" role="group" aria-label="Season filter"></div>
-    </div>
+  <p class="links">
+    <a href="https://github.com/lsxx20">GitHub</a>
+    <a href="https://www.linkedin.com/in/si-xian-li">LinkedIn</a>
+    <a href="mailto:b13208013@ntu.edu.tw">Email</a>
+    <a href="cv.pdf">CV</a>
+  </p>
 
-    <div class="board">
-      <div id="chart" aria-label="Scatter plot of actual pay versus model valuation"></div>
-      <aside class="card" id="card" aria-live="polite"></aside>
-    </div>
+  <section id="research">
+    <p class="label">Research</p>
 
-    <section class="ledger">
-      <div class="ledger-head">
-        <h3>The ledger</h3>
-        <div class="toggle" role="group" aria-label="Ledger direction">
-          <button id="btn-under" class="on">Paid least vs. the model</button>
-          <button id="btn-over">Paid most vs. the model</button>
+    <article class="item">
+      <h2>Research Assistant <span class="org">— National Science and Technology Council</span></h2>
+      <p class="meta">Apr 2026 – present · Advisor Chiao-Ling Kuo</p>
+      <p>Geospatial text mining over 10.7k+ social-media posts on the Southern Taiwan Science Park — CKIP named-entity recognition and LLM-assisted classification to map public discourse and urban dynamics around high-tech park expansion — alongside digital-twin simulations of the park in NVIDIA OpenUSD.</p>
+      <details class="more">
+        <summary>Read more</summary>
+        <div class="body">
+          <p>The Science Park has reshaped the towns around it, and the argument about that change happens largely online. My work turns that discourse into spatial data: named-entity recognition anchors each post to a place, an anchor-purity test filters the noisy ones out (cutting noise by 22%), and LLM-assisted classification sorts what people are actually debating — transport, infrastructure, wages, public safety.</p>
+          <p>In parallel, I build digital-twin simulations of the park's expansion in NVIDIA OpenUSD, connecting the discourse layer to the physical one. Together they give the lab a standard pipeline from unstructured text to analyzable geography.</p>
         </div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th class="r">Actual pay</th>
-            <th class="r">Model value</th>
-            <th class="r">Gap</th>
-          </tr>
-        </thead>
-        <tbody id="ledger-body"></tbody>
-      </table>
-    </section>
+      </details>
+    </article>
 
-    <footer>
-      <p class="method"><strong>Method.</strong> Target is share of salary cap, never dollars — dollars are recovered through each season’s cap. Group B (market context) covers Bird rights, team payroll level, cap space, and team identity; everything else — production, efficiency, age, health, playoff elevation — is Group A, basketball skill. Skill and market contributions sum exactly to the model’s valuation. Trained on 2017–2022, tested on 2023–2024.</p>
-      <p class="sig">Built by <a href="https://sixianli.com">Si-Xian Li</a> · XGBoost · SHAP · D3 · <a href="https://github.com/lsxx20">source</a></p>
-    </footer>
+    <article class="item">
+      <h2>Undergraduate Researcher <span class="org">— Geospatial Computing Lab, NTU</span></h2>
+      <p class="meta">Sep 2025 – present · Advisor Tzai-Hung Wen</p>
+      <p>A spatiotemporal pipeline over ~15,000 search-query series (2016–2025) quantifying post-pandemic shifts in urban work behavior, co-authored as a comparative Taiwan × India analysis with researchers in India.</p>
+      <details class="more">
+        <summary>Read more</summary>
+        <div class="body">
+          <p>Did the pandemic change how people work — and did it change differently in different places? Search behavior is the proxy: ~15,000 query series spanning a decade, cleaned, aligned, and tested across Taiwan and four Indian states. I built the pipeline end to end and upgraded its statistical layer from simple ANOVA to Welch tests with false-discovery-rate correction and effect sizes, so the cross-national comparisons hold up under scrutiny. The analysis is co-authored with collaborators in India.</p>
+        </div>
+      </details>
+    </article>
 
-  </main>
+    <article class="item">
+      <h2>Research Assistant <span class="org">— depositar lab, Academia Sinica</span></h2>
+      <p class="meta">Sep 2025 – present · Advisor Tyng-Ruey Chuang</p>
+      <p>Multi-site field recording across the Penghu archipelago, and a co-developed audio-visual ingestion tool that standardized raw data intake for the lab’s soundscape platform.</p>
+      <details class="more">
+        <summary>Read more</summary>
+        <div class="body">
+          <p>depositar is a platform for research data, and its newest collection is sound. I carried acoustic equipment across the Penghu archipelago to record the founding dataset for the lab’s soundscape platform, then co-built the ingestion tool that standardizes every member’s raw audio-visual data on the way in — ending the format drift that had crept across the team. The earlier summer at the GIS Center (below, under Projects) grew into this role.</p>
+        </div>
+      </details>
+    </article>
+  </section>
+
+  <section id="projects">
+    <p class="label">Selected Projects</p>
+
+    <article class="item">
+      <h2>Public Transit Accessibility in Kaohsiung</h2>
+      <p class="meta">2023 · 1st Prize, National High School GIS Competition, Taiwan</p>
+      <p>A PTAL (Public Transport Accessibility Level) analysis of Kaohsiung’s entire public-transport network — some 150 bus routes, the metro and light rail, and 56,129 reference points across all 38 districts — adapted from Transport for London’s methodology and recalibrated to how Kaohsiung actually moves.</p>
+      <details class="more">
+        <summary>Read more</summary>
+        <div class="body">
+          <p>The question began as a personal one: without the metro, could I still get to school? Answering it city-wide meant importing London’s PTAL method and re-tuning every parameter to local reality — peak hour shifted 75 minutes earlier to match Kaohsiung commutes, a 300 m analysis grid in place of London’s 1 km, walking speed recalibrated to 3.6 km/h, and reliability factors set separately for buses and rail from delay studies and operator reports.</p>
+          <p>The pipeline pulled the full network from OpenStreetMap — 2,308 bus stops, 37 metro and 31 light-rail stations — cleaned directional duplicates in Python, then computed walk time, waiting time, and equivalent doorstep frequency for each of 56,129 grid points in QGIS, interpolated into accessibility maps for every district.</p>
+          <figure class="fig">
+            <img src="assets/kaohsiung-ptal.png" alt="PTAL accessibility map of Kaohsiung, with high accessibility concentrated in the western urban core and low accessibility across the rural north and east">
+            <figcaption>Fig. 1 — Kaohsiung PTAL map: accessibility index across all 38 districts, IDW-interpolated. Warm colours mark higher accessibility.</figcaption>
+          </figure>
+          <p>The maps answered more than the original question. Accessibility broadly tracks population density — except in new redevelopment zones, dense but underserved. And comparing the network before and after each rail line quantified their real effect: the metro lifted accessibility scores by 4–5 where it ran; the light rail, only 1.5–2.</p>
+          <p>→ <a href="assets/kaohsiung-ptal-report.pdf">Full report (PDF)</a></p>
+        </div>
+      </details>
+    </article>
+
+    <article class="item">
+      <h2>NBA Salary Valuation with Machine Learning</h2>
+      <p class="meta">2025 · XGBoost · SHAP · D3</p>
+      <p>An XGBoost system estimating player value as a share of the salary cap, validated on a strict time split (R² = 0.799), with SHAP attribution separating skill from market factors. Served as an interactive D3 dashboard ranking value gaps by player and season.</p>
+      <details class="more">
+        <summary>Read more</summary>
+        <div class="body">
+          <p>Every NBA offseason produces contracts that look wrong; this measures how wrong. The model predicts a player’s share of the salary cap from performance data, validated on a strict time split so it never sees the future. SHAP attribution then splits each valuation into two stories — what a player’s skills justify, and what the market pays for anyway. The results are browsable by player and season in an interactive D3 dashboard.</p>
+          <figure class="fig">
+            <img src="assets/nba-dashboard.png" alt="Interactive D3 dashboard of NBA salary valuation: a scatter of actual pay versus model value along a dashed fair-pay line, with a player valuation card showing skill and market contributions">
+            <figcaption>Fig. 2 — The dashboard: 898 player-seasons against the fair-pay line.</figcaption>
+          </figure>
+          <p>→ <a href="https://lsxx20.github.io/nba_valuation/">Explore the dashboard</a></p>
+        </div>
+      </details>
+    </article>
+
+    <article class="item">
+      <h2>Smangus Historical Web Map</h2>
+      <p class="meta">2025 · Academia Sinica</p>
+      <p>Century-old Japanese survey maps of the Smangus Atayal community, georeferenced and layered with cultural data gathered in the field — an interactive web map for exploring the settlement across a hundred years of change.</p>
+      <details class="more">
+        <summary>Read more</summary>
+        <div class="body">
+          <p>A hundred years ago, Japanese surveyors mapped the mountains around Smangus; the sheets then sat in archives, unreadable against the modern landscape. Working in the community, I georeferenced the colonial-era maps, aligned them with cultural data gathered in the field, and built a web map where the two centuries sit in the same frame — a tool for the community and for researchers to read change across time.</p>
+          <!-- 截圖到位後，在這裡加：
+          <figure class="fig">
+            <img src="assets/smangus-map.png" alt="Interactive web map overlaying colonial-era survey maps of Smangus">
+            <figcaption>Fig. 3 — Colonial survey sheets, georeferenced.</figcaption>
+          </figure> -->
+          <p>→ <a href="https://lsxx20.github.io/mybook2/">Open the map</a></p>
+        </div>
+      </details>
+    </article>
+  </section>
+
+  <section id="tools">
+    <p class="label">Tools</p>
+    <p class="tools">
+      <span class="k">Code</span> — Python · C++ · JavaScript · R<br>
+      <span class="k">Spatial</span> — ArcGIS · QGIS · Remote Sensing · NVIDIA OpenUSD<br>
+      <span class="k">Web &amp; Viz</span> — D3.js · deck.gl · MapLibre · Leaflet · FastAPI · GCP
+    </p>
+  </section>
+
+  <section id="contact">
+    <p class="label">Contact</p>
+    <p>The fastest way to reach me is email: <a href="mailto:b13208013@ntu.edu.tw">b13208013@ntu.edu.tw</a>. Code lives at <a href="https://github.com/lsxx20">github.com/lsxx20</a>.</p>
+    <p class="aside">Off the clock: 400 m and 800 m on NTU’s varsity track team, chasing a sub-2:00 800.</p>
+
+    <div class="colophon">
+      <span>© 2026 Si-Xian Li · Built by hand</span>
+    </div>
+  </section>
 
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
-<script>
-(function () {
-  'use strict';
-  var DATA = null, CAPS = null;
-  var state = { season: 'all', sel: null, ledger: 'under' };
-
-  var fmtM = function (usd) {
-    var m = usd / 1e6;
-    return '$' + (m >= 100 ? d3.format('.0f')(m) : d3.format('.1f')(m)) + 'M';
-  };
-  var fmtPct = function (p) { return d3.format('.1%')(p); };
-  var cap = function (y) { return CAPS[y] || CAPS[2024]; };
-  var gapOf = function (d) { return d.pr - d.a; };
-
-  function boot() {
-    d3.json('data.json').then(function (j) {
-      DATA = j.rows;
-      CAPS = j.meta.caps;
-      DATA.forEach(function (d, i) { d.id = i; });
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      buildControls(j.meta.seasons);
-      buildChart();
-      // default: the most famous bargain in the set, else biggest gap
-      var star = DATA.filter(function (d) { return d.n === 'Tyrese Maxey' && d.y === 2024; })[0];
-      select(star || DATA.reduce(function (a, b) { return gapOf(a) > gapOf(b) ? a : b; }));
-      renderLedger();
-    }).catch(function (e) {
-      console.error(e);
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('error').style.display = 'block';
-    });
-  }
-
-  /* ---------- controls ---------- */
-  function buildControls(seasons) {
-    var dl = document.getElementById('players');
-    var seen = {};
-    DATA.forEach(function (d) {
-      var key = d.n + ' · ' + d.y;
-      if (!seen[key]) { seen[key] = 1; var o = document.createElement('option'); o.value = key; dl.appendChild(o); }
-    });
-    var q = document.getElementById('q');
-    q.addEventListener('change', function () {
-      var v = q.value.trim();
-      var m = DATA.filter(function (d) { return (d.n + ' · ' + d.y) === v; })[0]
-           || DATA.filter(function (d) { return d.n.toLowerCase() === v.toLowerCase(); })
-                  .sort(function (a, b) { return b.y - a.y; })[0];
-      if (m) { if (state.season !== 'all' && m.y !== state.season) setSeason('all'); select(m); }
-    });
-
-    var box = document.getElementById('seasons');
-    var mk = function (label, val) {
-      var b = document.createElement('button');
-      b.textContent = label;
-      b.dataset.v = val;
-      b.addEventListener('click', function () { setSeason(val === 'all' ? 'all' : +val); });
-      box.appendChild(b);
-    };
-    mk('All seasons', 'all');
-    seasons.forEach(function (s) { mk('’' + String(s).slice(2), s); });
-    syncSeasonButtons();
-  }
-
-  function setSeason(s) {
-    state.season = s;
-    syncSeasonButtons();
-    updateDots();
-    renderLedger();
-  }
-  function syncSeasonButtons() {
-    d3.selectAll('#seasons button').classed('on', function () {
-      return String(this.dataset.v) === String(state.season);
-    });
-  }
-
-  /* ---------- scatter ---------- */
-  var W = 640, H = 560, M = { t: 26, r: 18, b: 52, l: 56 };
-  var x, ykl, svg, dots, halo, tip;
-
-  function buildChart() {
-    var host = d3.select('#chart');
-    var max = d3.max(DATA, function (d) { return Math.max(d.a, d.pr); }) * 1.06;
-    x = d3.scaleLinear().domain([0, max]).range([M.l, W - M.r]);
-    ykl = d3.scaleLinear().domain([0, max]).range([H - M.b, M.t]);
-
-    svg = host.append('svg').attr('viewBox', '0 0 ' + W + ' ' + H);
-
-    var gx = svg.append('g').attr('class', 'axis').attr('transform', 'translate(0,' + (H - M.b) + ')')
-      .call(d3.axisBottom(x).ticks(6, '.0%').tickSize(4));
-    var gy = svg.append('g').attr('class', 'axis').attr('transform', 'translate(' + M.l + ',0)')
-      .call(d3.axisLeft(ykl).ticks(6, '.0%').tickSize(4));
-    gx.select('.domain').remove(); gy.select('.domain').remove();
-
-    svg.append('text').attr('class', 'axis-title')
-      .attr('x', W - M.r).attr('y', H - 14).attr('text-anchor', 'end')
-      .text('actual pay, share of salary cap');
-    svg.append('text').attr('class', 'axis-title')
-      .attr('transform', 'rotate(-90)')
-      .attr('x', -M.t).attr('y', 16).attr('text-anchor', 'end')
-      .text('model valuation, share of cap');
-
-    svg.append('line').attr('class', 'parity')
-      .attr('x1', x(0)).attr('y1', ykl(0)).attr('x2', x(max)).attr('y2', ykl(max));
-    var lx = x(max * 0.62), ly = ykl(max * 0.62);
-    svg.append('text').attr('class', 'parity-label')
-      .attr('x', lx + 10).attr('y', ly - 10)
-      .attr('transform', 'rotate(' + angle() + ',' + (lx + 10) + ',' + (ly - 10) + ')')
-      .text('paid exactly what the model sees');
-    svg.append('text').attr('class', 'zone-label').attr('x', M.l + 10).attr('y', M.t + 16).text('paid less than the model sees ↑');
-    svg.append('text').attr('class', 'zone-label').attr('x', W - M.r - 8).attr('y', H - M.b - 12).attr('text-anchor', 'end').text('↓ paid more than the model sees');
-
-    halo = svg.append('circle').attr('class', 'halo').attr('r', 9).style('display', 'none');
-
-    dots = svg.append('g').selectAll('circle')
-      .data(DATA).enter().append('circle')
-      .attr('class', 'dot')
-      .attr('r', 3.4)
-      .attr('cx', function (d) { return x(d.a); })
-      .attr('cy', function (d) { return ykl(Math.max(0, d.pr)); })
-      .on('mouseenter', showTip)
-      .on('mousemove', moveTip)
-      .on('mouseleave', hideTip)
-      .on('click', function (ev, d) { select(d); });
-
-    tip = host.append('div').attr('class', 'tip');
-
-    function angle() {
-      var p1 = [x(0), ykl(0)], p2 = [x(max), ykl(max)];
-      return Math.atan2(p2[1] - p1[1], p2[0] - p1[0]) * 180 / Math.PI;
-    }
-  }
-
-  function updateDots() {
-    dots.classed('dim', function (d) { return state.season !== 'all' && d.y !== state.season; });
-  }
-
-  function showTip(ev, d) {
-    tip.style('opacity', 1).html(
-      '<div class="t-name">' + d.n + ' <span class="t-line">’' + String(d.y).slice(2) + '</span></div>' +
-      '<div class="t-line">actual ' + fmtPct(d.a) + ' · model ' + fmtPct(d.pr) + '</div>'
-    );
-    moveTip(ev);
-  }
-  function moveTip(ev) {
-    var host = document.getElementById('chart').getBoundingClientRect();
-    var px = ev.clientX - host.left, py = ev.clientY - host.top;
-    tip.style('left', Math.min(px + 14, host.width - 240) + 'px').style('top', (py - 10) + 'px');
-  }
-  function hideTip() { tip.style('opacity', 0); }
-
-  /* ---------- selection & card ---------- */
-  function select(d) {
-    state.sel = d;
-    dots.classed('sel', function (o) { return o.id === d.id; });
-    dots.filter(function (o) { return o.id === d.id; }).raise();
-    halo.style('display', null).attr('cx', x(d.a)).attr('cy', ykl(Math.max(0, d.pr)));
-    renderCard(d);
-  }
-
-  function renderCard(d) {
-    var c = cap(d.y);
-    var aU = d.a * c, pU = d.pr * c, gU = pU - aU;
-    var under = gU >= 0;
-    var card = d3.select('#card');
-    card.html('');
-
-    card.append('div').attr('class', 'c-season num').text(d.y + '–' + String(d.y + 1).slice(2) + ' season');
-    card.append('h2').text(d.n);
-    card.append('div').attr('class', 'c-meta').text(d.p + ' · ' + d.t + (d.yr ? ' · model contract length: ' + d.yr + ' yr' : ''));
-
-    var figs = card.append('div').attr('class', 'figures');
-    var f1 = figs.append('div');
-    f1.append('div').attr('class', 'fig-label').text('Actual pay');
-    f1.append('div').attr('class', 'fig-value').text(fmtM(aU));
-    f1.append('div').attr('class', 'fig-sub').text(fmtPct(d.a) + ' of cap');
-    var f2 = figs.append('div');
-    f2.append('div').attr('class', 'fig-label model').text('Model value');
-    f2.append('div').attr('class', 'fig-value').style('color', 'var(--blue)').text(fmtM(pU));
-    f2.append('div').attr('class', 'fig-sub').text(fmtPct(Math.max(0, d.pr)) + ' of cap');
-
-    renderGauge(card, d, c);
-
-    var v = card.append('p').attr('class', 'verdict');
-    v.html(under
-      ? 'The model sees <strong>' + fmtM(Math.abs(gU)) + ' more</strong> than this contract pays.'
-      : 'This contract pays <strong>' + fmtM(Math.abs(gU)) + ' above</strong> the model’s read.');
-
-    card.append('div').attr('class', 'split-title').text('Where the valuation comes from');
-    var maxSplit = Math.max(Math.abs(d.sk), Math.abs(d.mk), 0.0001);
-    splitRow(card, 'Skill', d.sk, maxSplit, c, 'var(--blue)');
-    splitRow(card, 'Market', d.mk, maxSplit, c, 'var(--gray-bar)');
-
-    card.append('div').attr('class', 'factors-title').text('What moves it');
-    renderFactors(card, d);
-    card.append('p').attr('class', 'factors-note').text('Bars are SHAP contributions, in share-of-cap points.');
-  }
-
-  function splitRow(card, label, val, max, c, color) {
-    var row = card.append('div').attr('class', 'split-row');
-    row.append('span').attr('class', 's-label').text(label);
-    row.append('div').attr('class', 's-bar')
-      .append('div').attr('class', 's-fill')
-      .style('background', color)
-      .style('width', Math.min(100, Math.abs(val) / max * 100) + '%');
-    row.append('span').attr('class', 's-val')
-      .text((val < 0 ? '−' : '') + fmtPct(Math.abs(val)) + ' · ' + (val < 0 ? '−' : '') + fmtM(Math.abs(val * c)));
-  }
-
-  function renderFactors(card, d) {
-    var data = d.f.slice(0, 8);
-    if (!data.length) { card.append('p').attr('class', 'factors-note').text('No single factor stands out.'); return; }
-    var rowH = 26, w = 300, mid = 150, labelW = 132;
-    var maxV = d3.max(data, function (r) { return Math.abs(r[1]); });
-    var sc = d3.scaleLinear().domain([0, maxV]).range([0, (w - labelW) / 2 - 34]);
-    var s = card.append('div').attr('class', 'factors').append('svg')
-      .attr('viewBox', '0 0 ' + w + ' ' + (data.length * rowH))
-      .attr('preserveAspectRatio', 'xMidYMid meet');
-    var axisX = labelW + (w - labelW) / 2;
-    s.append('line').attr('class', 'f-axis').attr('x1', axisX).attr('x2', axisX).attr('y1', 0).attr('y2', data.length * rowH);
-    var g = s.selectAll('g').data(data).enter().append('g')
-      .attr('transform', function (r, i) { return 'translate(0,' + i * rowH + ')'; });
-    g.append('text').attr('class', 'f-label').attr('x', labelW - 8).attr('y', rowH / 2 + 4).attr('text-anchor', 'end')
-      .text(function (r) { return r[0]; });
-    g.append('rect')
-      .attr('x', function (r) { return r[1] >= 0 ? axisX : axisX - sc(Math.abs(r[1])); })
-      .attr('y', rowH / 2 - 5)
-      .attr('width', function (r) { return Math.max(1, sc(Math.abs(r[1]))); })
-      .attr('height', 10)
-      .attr('fill', function (r) { return r[1] >= 0 ? 'var(--blue)' : 'var(--gray-bar)'; });
-    g.append('text').attr('class', 'f-val')
-      .attr('x', function (r) { return r[1] >= 0 ? axisX + sc(Math.abs(r[1])) + 5 : axisX - sc(Math.abs(r[1])) - 5; })
-      .attr('text-anchor', function (r) { return r[1] >= 0 ? 'start' : 'end'; })
-      .attr('y', rowH / 2 + 4)
-      .text(function (r) { return (r[1] >= 0 ? '+' : '−') + d3.format('.1%')(Math.abs(r[1])); });
-  }
-
-  function renderGauge(card, d, c) {
-    var w = 300, h = 34, pad = 6;
-    var max = Math.max(d.a, Math.max(0, d.pr)) * 1.18 + 0.0001;
-    var sc = d3.scaleLinear().domain([0, max]).range([pad, w - pad]);
-    var s = card.append('div').attr('class', 'gauge').append('svg').attr('viewBox', '0 0 ' + w + ' ' + h);
-    s.append('line').attr('x1', pad).attr('x2', w - pad).attr('y1', h / 2).attr('y2', h / 2).attr('stroke', 'var(--line)');
-    var xa = sc(d.a), xp = sc(Math.max(0, d.pr));
-    s.append('line').attr('x1', Math.min(xa, xp)).attr('x2', Math.max(xa, xp))
-      .attr('y1', h / 2).attr('y2', h / 2)
-      .attr('stroke', d.pr >= d.a ? 'var(--blue)' : 'var(--gray-bar)').attr('stroke-width', 5);
-    s.append('circle').attr('cx', xa).attr('cy', h / 2).attr('r', 4.5).attr('fill', 'var(--ink)');
-    s.append('circle').attr('cx', xp).attr('cy', h / 2).attr('r', 4.5).attr('fill', 'var(--blue)');
-    var aLeft = xa <= xp;
-    s.append('text').attr('class', 'f-val').attr('x', xa).attr('y', aLeft ? h / 2 + 16 : h / 2 - 9)
-      .attr('text-anchor', 'middle').text('actual');
-    s.append('text').attr('class', 'f-val').attr('x', xp).attr('y', aLeft ? h / 2 - 9 : h / 2 + 16)
-      .attr('text-anchor', 'middle').attr('fill', 'var(--blue)').text('model');
-  }
-
-  /* ---------- ledger ---------- */
-  function renderLedger() {
-    var pool = DATA.filter(function (d) { return state.season === 'all' || d.y === state.season; });
-    var rows = pool.slice().sort(function (a, b) {
-      return state.ledger === 'under' ? gapOf(b) - gapOf(a) : gapOf(a) - gapOf(b);
-    }).slice(0, 10);
-
-    var tb = d3.select('#ledger-body');
-    tb.html('');
-    rows.forEach(function (d) {
-      var c = cap(d.y), g = (d.pr - d.a) * c;
-      var tr = tb.append('tr').on('click', function () {
-        select(d);
-        document.getElementById('chart').scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-      tr.append('td').attr('class', 'player-cell').html(d.n + '<span class="yr-tag">’' + String(d.y).slice(2) + ' · ' + d.t + '</span>');
-      tr.append('td').attr('class', 'num-cell r').text(fmtM(d.a * c));
-      tr.append('td').attr('class', 'num-cell r').text(fmtM(Math.max(0, d.pr) * c));
-      tr.append('td').attr('class', 'num-cell r').html('<span class="' + (g >= 0 ? 'gap-pos' : 'gap-neg') + '">' + (g >= 0 ? '+$' : '−$') + fmtM(Math.abs(g)).slice(1) + '</span>');
-    });
-  }
-
-  document.getElementById('btn-under').addEventListener('click', function () {
-    state.ledger = 'under';
-    this.classList.add('on'); document.getElementById('btn-over').classList.remove('on');
-    renderLedger();
-  });
-  document.getElementById('btn-over').addEventListener('click', function () {
-    state.ledger = 'over';
-    this.classList.add('on'); document.getElementById('btn-under').classList.remove('on');
-    renderLedger();
-  });
-
-  boot();
-})();
-</script>
 
 </body>
 </html>
