@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An interactive map of the boundary systems that divide Taipei: electoral districts, polling-station areas, school zones, police and court jurisdictions, statistical areas and more, built from official data.">
+<meta property="og:title" content="Taipei Boundaries">
+<meta property="og:description" content="An interactive map of the boundary systems that divide Taipei: electoral districts, polling-station areas, school zones, police and court jurisdictions, statistical areas and more, built from official data.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sixianli.com/taipei-boundaries/">
+<meta property="og:image" content="https://sixianli.com/taipei-boundaries/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2316191d'/%3E%3Cpath d='M7 9h8v7H7zM17 9h8v12h-8zM7 18h8v5H7z' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://sixianli.com/taipei-boundaries/">
+<title>Taipei Boundaries</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: one-screen map app. Sidebar (layers, search, details) on the left, map on the right;
+   on phones the map sits on top and the panel scrolls below it. */
+:root {
+  --bg: #f6f7f8;          /* outside the city */
+  --panel: #ffffff;
+  --land: #ffffff;
+  --ink: #16191d;
+  --ink-2: #545b64;
+  --ink-3: #8a919a;
+  --rule: #dfe2e6;
+  --line: #2b3036;        /* unit boundaries of the active layer */
+  --line-faint: #c4c9cf;  /* district context lines */
+  --accent: #1d5fd1;      /* selection */
+  --accent-soft: rgba(29, 95, 209, 0.16);
+  --hover: rgba(22, 25, 29, 0.07);
+  --null: #9aa1a9;        /* hatching for areas the data cannot assign */
+  --water: #dfe8ee;       /* river zones */
+  --road: #eceef0;        /* roads wider than 8 m */
+  --metro: #4b5563;
+  --d1: #cde2fb; --d2: #86b6ef; --d3: #3987e5; --d4: #1c5cab; --d5: #0d366b;  /* density, low -> high */
+  --font: "Public Sans", "Noto Sans TC", "Helvetica Neue", Arial, sans-serif;
+  --zh: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1113; --panel: #16191c; --land: #1c2024; --ink: #eef0f2; --ink-2: #b3b9c0; --ink-3: #7e858d;
+    --rule: #2a2f35; --line: #d9dde2; --line-faint: #3a4047; --accent: #6ea2ff; --accent-soft: rgba(110, 162, 255, 0.22);
+    --hover: rgba(238, 240, 242, 0.08); --null: #6c737b; color-scheme: dark;
+    --water: #1d2a33; --road: #262b31; --metro: #aab2bb;
+    --d1: #104281; --d2: #1c5cab; --d3: #2a78d6; --d4: #6da7ec; --d5: #b7d3f6;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1113; --panel: #16191c; --land: #1c2024; --ink: #eef0f2; --ink-2: #b3b9c0; --ink-3: #7e858d;
+  --rule: #2a2f35; --line: #d9dde2; --line-faint: #3a4047; --accent: #6ea2ff; --accent-soft: rgba(110, 162, 255, 0.22);
+  --hover: rgba(238, 240, 242, 0.08); --null: #6c737b; color-scheme: dark;
+  --water: #1d2a33; --road: #262b31; --metro: #aab2bb;
+  --d1: #104281; --d2: #1c5cab; --d3: #2a78d6; --d4: #6da7ec; --d5: #b7d3f6;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.45; }
+* { box-sizing: border-box; }
+button, input, select { font: inherit; color: inherit; }
+.zh { font-family: var(--zh); }
+.num { font-variant-numeric: tabular-nums; }
+
+.app { display: grid; grid-template-columns: minmax(280px, 310px) 1fr; height: 100%; }
+.side { background: var(--panel); border-right: 1px solid var(--rule); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.side-scroll { overflow-y: auto; flex: 1; min-height: 0; }
+.mapwrap { position: relative; min-width: 0; min-height: 0; }
+.mapbox { position: absolute; inset: 0; }
+.panel { position: absolute; top: 14px; right: 14px; width: min(370px, calc(100% - 28px)); max-height: calc(100% - 28px); overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.10); z-index: 5; }
+
+header.top { padding: 20px 20px 14px; border-bottom: 1px solid var(--rule); display: grid; gap: 4px; }
+header.top h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+header.top p { margin: 0; color: var(--ink-2); font-size: 13px; max-width: 46ch; }
+
+.search { padding: 12px 20px; border-bottom: 1px solid var(--rule); position: relative; }
+.search input { width: 100%; padding: 9px 12px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); }
+.search input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.results { position: absolute; left: 20px; right: 20px; top: calc(100% - 6px); z-index: 20; background: var(--panel);
+  border: 1px solid var(--rule); border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.12); max-height: 50vh; overflow-y: auto; }
+.results button { display: grid; width: 100%; text-align: left; padding: 8px 12px; border: 0; background: none; cursor: pointer; gap: 1px; }
+.results button:hover, .results button:focus-visible { background: var(--hover); outline: none; }
+.results .r-layer { font-size: 11.5px; color: var(--ink-3); }
+.results .empty { padding: 10px 12px; color: var(--ink-3); }
+
+.layers { padding: 8px 12px 14px; border-bottom: 1px solid var(--rule); }
+.layers h2, .section-label { font-size: 11.5px; font-weight: 600; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; margin: 0; }
+.group { margin-top: 10px; }
+.group .section-label { padding: 0 8px 3px; }
+.layer-btn { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; width: 100%; padding: 5px 8px; border: 0;
+  background: none; border-radius: 5px; cursor: pointer; text-align: left; }
+.layer-btn:hover { background: var(--hover); }
+.layer-btn:focus-visible { outline: 2px solid var(--accent); }
+.layer-btn[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.layer-btn[aria-pressed="true"] .count { color: var(--panel); opacity: .75; }
+.layer-btn .count { color: var(--ink-3); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.layer-select { display: none; }
+
+.panel { padding: 16px 18px 20px; display: grid; gap: 14px; align-content: start; }
+.panel .kicker { font-size: 12px; color: var(--ink-3); }
+.panel h3 { margin: 0; font-size: 19px; line-height: 1.25; font-weight: 700; text-wrap: balance; overflow-wrap: anywhere; }
+.panel .zhname { font-family: var(--zh); font-size: 15px; color: var(--ink-2); }
+.panel .sub { color: var(--ink-2); }
+.panel p { margin: 0; max-width: 62ch; }
+.attrs { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; }
+.attrs dt { color: var(--ink-3); white-space: nowrap; }
+.attrs dd { margin: 0; overflow-wrap: anywhere; min-width: 0; }
+.note { border-left: 3px solid var(--null); padding: 6px 10px; color: var(--ink-2); background: var(--bg); border-radius: 0 4px 4px 0; }
+.sources { display: grid; gap: 4px; padding: 0; margin: 0; list-style: none; }
+.sources a { color: var(--accent); text-decoration: none; }
+.sources a:hover { text-decoration: underline; }
+.hint { color: var(--ink-3); }
+.clear { justify-self: start; border: 1px solid var(--rule); background: none; border-radius: 5px; padding: 4px 10px; cursor: pointer; color: var(--ink-2); }
+.clear:hover { background: var(--hover); }
+.card-head { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; }
+.x { border: 0; background: none; cursor: pointer; color: var(--ink-3); font-size: 20px; line-height: 1; padding: 2px 4px; border-radius: 4px; }
+.x:hover { color: var(--ink); background: var(--hover); }
+.x:focus-visible { outline: 2px solid var(--accent); }
+
+.ov { display: grid; gap: 10px; }
+.ov-layer { display: grid; gap: 2px; }
+.ov-layer .ov-name { font-size: 12px; color: var(--ink-3); }
+.ov-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: baseline; width: 100%; padding: 4px 6px; margin: 0 -6px;
+  border: 0; background: none; border-radius: 4px; text-align: left; cursor: pointer; }
+.ov-item:hover, .ov-item:focus-visible { background: var(--hover); outline: none; }
+.ov-item .pct { font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: 12.5px; white-space: nowrap; }
+.ov-item .here { color: var(--accent); font-size: 11.5px; font-weight: 600; margin-left: 6px; white-space: nowrap; }
+.ov-more { border: 0; background: none; color: var(--accent); padding: 2px 0; cursor: pointer; justify-self: start; font-size: 12.5px; }
+
+details.about { padding: 14px 20px 22px; border-top: 1px solid var(--rule); color: var(--ink-2); }
+details.about summary { cursor: pointer; color: var(--ink); font-weight: 600; }
+details.about p { margin: 10px 0 0; max-width: 62ch; }
+details.about a { color: var(--accent); }
+
+svg.map { display: block; width: 100%; height: 100%; background: var(--bg); touch-action: none; }
+.land { fill: var(--land); }
+.city-edge { fill: none; stroke: var(--ink-3); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+.ctx { fill: none; stroke: var(--line-faint); stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
+.water { fill: var(--water); pointer-events: none; }
+.roads { fill: var(--road); pointer-events: none; }
+.metro { fill: var(--panel); stroke: var(--metro); stroke-width: 1.5; pointer-events: none; }
+.metro-lbl { font-size: 10.5px; fill: var(--ink-2); paint-order: stroke; stroke: var(--land); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; font-family: var(--zh); }
+.unit.shaded { fill-opacity: .82; }
+.unit.shaded:hover { fill-opacity: .6; }
+.unit { fill: transparent; stroke: var(--line); stroke-width: .6; vector-effect: non-scaling-stroke; cursor: pointer; }
+.unit.sparse { stroke-width: 1; }
+.unit.patch { fill: var(--line); fill-opacity: .1; stroke-width: 1; }
+.unit:hover { fill: var(--hover); }
+.unit.patch:hover { fill-opacity: .25; }
+.unit.null { fill: url(#hatch); stroke: var(--null); }
+.sel { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; vector-effect: non-scaling-stroke; pointer-events: none; }
+.prev { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; pointer-events: none; }
+.peek { fill: none; stroke: var(--ink); stroke-width: 2.5; vector-effect: non-scaling-stroke; pointer-events: none; }
+.pin { fill: var(--accent); stroke: var(--panel); stroke-width: 2; pointer-events: none; }
+.lbl { font-size: 12px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: var(--land); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; text-anchor: middle; dominant-baseline: middle; }
+
+.tip { position: absolute; pointer-events: none; z-index: 10; background: var(--ink); color: var(--panel); padding: 6px 9px; border-radius: 5px;
+  font-size: 12.5px; max-width: 280px; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+.tip .t-sub { opacity: .75; font-size: 11.5px; }
+.tools { position: absolute; left: 14px; top: 14px; display: grid; gap: 6px; }
+.tools button { width: 34px; height: 34px; border-radius: 6px; border: 1px solid var(--rule); background: var(--panel); cursor: pointer; font-size: 18px; line-height: 1; }
+.tools button:hover { background: var(--bg); }
+.tools button:focus-visible { outline: 2px solid var(--accent); }
+.legend { position: absolute; left: 14px; bottom: 14px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px;
+  display: grid; gap: 5px; font-size: 12px; color: var(--ink-2); max-width: calc(100% - 28px); }
+.legend .row { display: flex; gap: 8px; align-items: center; }
+.legend label.row { cursor: pointer; color: var(--ink); }
+.legend .scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; margin-top: 2px; }
+.legend .scale span { height: 8px; border-radius: 1px; }
+.legend .ticks { display: grid; grid-template-columns: repeat(5, 1fr); font-size: 10.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.legend .ticks span:not(:first-child) { margin-left: -1ch; }
+.pop { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 2px 22px; }
+.pop .v { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pop .k { font-size: 11.5px; color: var(--ink-3); }
+.legend svg { flex: none; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-3); }
+
+@media (max-width: 820px) {
+  html, body { height: auto; }
+  .app { display: flex; flex-direction: column; height: auto; }
+  .side { display: contents; }
+  header.top { order: 1; } .search { order: 2; } .layer-select { order: 3; }
+  .mapwrap { order: 4; }
+  header.top, .search, .layer-select, .side-scroll { background: var(--panel); }
+  .mapbox { position: relative; height: 62vh; min-height: 340px; }
+  .panel { position: static; width: auto; max-height: none; border: 0; border-top: 1px solid var(--rule); border-radius: 0; box-shadow: none; }
+  .side-scroll { overflow: visible; }
+  .layers { display: none; }
+  .layer-select { display: block; padding: 12px 16px; border-bottom: 1px solid var(--rule); }
+  .layer-select select { width: 100%; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 6px; background: var(--bg); }
+  header.top, .search, .panel, details.about { padding-left: 16px; padding-right: 16px; }
+  .side-scroll { order: 5; }
+  .results { left: 16px; right: 16px; }
+  .legend { font-size: 11.5px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<style>
+/* what the artifact host used to add */
+body { margin: 0; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.downloads ul { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+.downloads li { display: grid; gap: 1px; }
+.downloads .what { color: var(--ink-3); font-size: 12.5px; }
+.credit { padding: 14px 20px 26px; color: var(--ink-3); font-size: 12.5px; border-top: 1px solid var(--rule); }
+.credit a, .downloads a { color: var(--accent); }
+@media (max-width: 820px) { .credit { padding-left: 16px; padding-right: 16px; } }
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <aside class="side">
+    <header class="top">
+      <h1>Taipei Boundaries</h1>
+      <p>Explore the boundary systems that divide Taipei: electoral districts, school zones, police and court jurisdictions, statistical areas and more. Pick a layer, then click any area to see what overlaps it.</p>
+    </header>
+    <div class="search">
+      <label for="q" class="section-label" style="display:block;margin-bottom:6px">Find a place or unit</label>
+      <input id="q" type="search" autocomplete="off" placeholder="e.g. Dazhi, 大直, polling station 0917" aria-controls="results">
+      <div class="results" id="results" hidden></div>
+    </div>
+    <div class="layer-select">
+      <label for="layer-sel" class="section-label" style="display:block;margin-bottom:6px">Layer</label>
+      <select id="layer-sel"></select>
+    </div>
+    <div class="side-scroll">
+      <nav class="layers" id="layers" aria-label="Layers"></nav>
+      <details class="about downloads" id="downloads">
+        <summary>Download the data</summary>
+        <p>Full-resolution layers and tables. Coordinates: TWD97 / TM2 (EPSG:3826) in the GeoPackage, WGS84 in the GeoJSON files.</p>
+        <ul>
+          <li><a href="downloads/taipei_boundaries_geojson.zip" download>All layers as GeoJSON</a><span class="what">20 files, zipped, 4.2 MB</span></li>
+          <li><a href="downloads/taipei_boundaries_gpkg.zip" download>All layers as a GeoPackage</a><span class="what">one file, zipped, 7.3 MB</span></li>
+          <li><a href="downloads/taipei_boundaries_tables.zip" download>Village and lin crosswalks, overlap table</a><span class="what">3 CSV files, zipped, 484 KB</span></li>
+          <li><a href="downloads/README_zh.md" download>Methods, sources and known issues</a><span class="what">in Chinese, 20 KB</span></li>
+        </ul>
+      </details>
+      <details class="about" id="about">
+        <summary>About this map</summary>
+        <p>Every layer comes from published official data. Layers built from villages (里) or neighbourhoods (鄰, <i>lin</i>) share exactly the same edges, so they can be compared directly. Where the official data cannot decide which unit a piece of land belongs to, the map leaves it blank and shows it hatched, with the reason.</p>
+        <p>Shapes are simplified for the web (2 m tolerance; the median unit changes area by less than 0.02%, and the small zoning polygons by about 0.1%). Needle-thin slivers under 2 mm wide, left over where the source maps were merged, are removed; they changed no unit’s area by more than 0.1 m². Overlap percentages are computed from the full-resolution data, not from the shapes you see. An overlap is listed when it is at least 1% of the smaller of the two units, which hides hairline edge differences between datasets drawn by different agencies.</p>
+        <p>English names are used only where an official one exists: districts and villages (Chunghwa Post romanization), police precincts (Taipei City Police Department) and courts (court websites). Other proper names stay in Chinese. Twelve villages do not appear under their current spelling in the Chunghwa Post romanization list (a file dated 2013; 舊莊里, for example, is listed as 舊庄里), so their names also stay in Chinese. Numbered units and service areas get plain English labels written for this map, such as “Council constituency 1”, “Polling station 0917” or “Neihu District health center”; these are descriptions, not official English names.</p>
+        <p>The “What’s here” marker shows which unit of each layer contains the spot you clicked, tested against the simplified shapes; within a few metres of a boundary it may differ from the full-resolution data.</p>
+        <p>Population comes from the Ministry of the Interior’s household-registration figures for each village (September 2026), which add up exactly to the Civil Affairs Department’s district totals (2,418,872 residents). It is shown only for layers made of whole villages, where the sum is exact. Polling-station and school zones are drawn from neighbourhoods (lin), and lin-level population is not published as open data; subdistricts, statistical areas and zoning do not follow village lines. Those layers show no population rather than an estimate. Density is residents per km² of total area, including hills, river channels and riverbanks.</p>
+        <p>The base map draws every segment of the Public Works Department’s dataset of roads wider than 8 metres (263 of its 7,667 segments are recorded as narrower than 8 m), river zones from the urban-plan zoning map, and MRT stations placed at the centre of their exits (Taipei Rapid Transit Corporation). Station names are in Chinese; the open data has no English names.</p>
+        <p>Compiled 8 October 2026 from the sources listed under each layer. The idea comes from <a href="https://boundaries.beta.nyc/" target="_blank" rel="noopener">NYC Boundaries</a> by BetaNYC.</p>
+      </details>
+      <p class="credit">Compiled by <a href="https://sixianli.com">Si-Xian Li</a>, October 2026.</p>
+    </div>
+  </aside>
+  <main class="mapwrap" id="mapwrap">
+    <div class="mapbox" id="mapbox">
+    <svg class="map" id="map" role="img" aria-label="Map of Taipei boundaries">
+      <defs>
+        <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="6" height="6" style="fill: var(--land)"></rect>
+          <line x1="0" y1="0" x2="0" y2="6" style="stroke: var(--null); stroke-width: 2"></line>
+        </pattern>
+      </defs>
+      <g id="zoomg">
+        <path class="land" id="land"></path>
+        <path class="water" id="water"></path>
+        <path class="roads" id="roads"></path>
+        <g id="units"></g>
+        <path class="ctx" id="ctx"></path>
+        <path class="city-edge" id="edge"></path>
+        <path class="prev" id="prev"></path>
+        <path class="sel" id="sel"></path>
+        <path class="peek" id="peek"></path>
+      </g>
+      <g id="metro"></g>
+      <g id="labels"></g>
+      <circle class="pin" id="pin" r="5" hidden></circle>
+    </svg>
+    <div class="tools">
+      <button id="zin" aria-label="Zoom in">+</button>
+      <button id="zout" aria-label="Zoom out">−</button>
+      <button id="zreset" aria-label="Show the whole city" style="font-size:13px">⤢</button>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="tip" id="tip" hidden></div>
+    <div class="loading" id="loading">Loading boundaries…</div>
+    </div>
+    <section class="panel" id="panel" aria-live="polite"></section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script>
+"use strict";
+const DT = "https://data.taipei/dataset/detail?id=";
+const SRC = {
+  village: ["Taipei village boundary map, Civil Affairs Dept. (2026-09-21)", DT + "6b17b31d-4e16-495e-95b1-9fd1f47c80d8"],
+  lin: ["Taipei lin (neighbourhood) boundary map, Civil Affairs Dept. (2026-09-21)", DT + "6d864ede-c482-4f33-bb89-5be19dc772e1"],
+  council: ["Central Election Commission notice 1153150253 (2026-08-20)", "https://web.cec.gov.tw/central/article/63625"],
+  cecdb: ["Central Election Commission election database", "https://db.cec.gov.tw/"],
+  gazette: ["CEC notice 1043150299, Executive Yuan Gazette (2015)", "https://gazette.nat.gov.tw/EG_FileManager/eguploadpub/eg021215/ch02/type3/gov15/num2/Eg.pdf"],
+  polls: ["Taipei Election Commission: polling-station list (2026-08-31)", "https://web.cec.gov.tw/mect/article/64337"],
+  pollsfix: ["Taipei Election Commission: correction for Beitou, Xinyi, Zhongzheng (2026-10-07)", "https://web.cec.gov.tw/mect/article/65041"],
+  school: ["Dept. of Education: school zones by village and lin, 2026–27", DT + "678c5215-f14a-47e3-92bd-da43f9d7c7a9"],
+  police: ["Taipei City Police Department precinct websites (checked 2026-10-08)", "https://english.police.gov.taipei/SiteMap.aspx"],
+  fire: ["Taipei City Fire Department: battalion duty pages", "https://www.119.gov.taipei/News.aspx?n=73D28CF5B82976A7&sms=0F752A4EDAEDD0DD"],
+  court: ["Judicial Yuan: court directory (updated 2026-08-25)", "https://www.judicial.gov.tw/tw/cp-1889-119101-8a7a0-1.html"],
+  sanitation: ["Dept. of Environmental Protection: district sanitation teams", DT + "d42f6798-9824-4abf-b552-51a9146f4906"],
+  health: ["Organizational Rules of Taipei City District Health Centers, Art. 2", "https://laws.gov.taipei/law/LawSearch/LawPrint/FL031277?type=0"],
+  post: ["Chunghwa Post: 3-digit postal codes", "https://www.post.gov.tw/post/internet/Download/index.jsp?ID=220306"],
+  postEn: ["Chunghwa Post: official English names of villages and districts", "https://www.post.gov.tw/post/internet/Postal/index.jsp?ID=207"],
+  sub: ["Taipei subdistrict map, Civil Affairs Dept. (2026-06-23)", DT + "d8978c42-1343-4a86-82bc-27d949606e47"],
+  segis: ["Ministry of the Interior: level-2 statistical areas", "https://data.gov.tw/dataset/20598"],
+  zoning: ["Urban Development Dept.: urban-plan zoning map (file dated 2026-04-09)", DT + "3bab0a01-7936-4218-8cb5-f74dfcb43dda"],
+  pop: ["Ministry of the Interior: households and population by village (September 2026)", "https://data.gov.tw/dataset/77132"],
+  popCheck: ["Civil Affairs Dept.: population by district (used as a cross-check)", DT + "6a1dbb4e-e99c-4e67-ab09-f6d83852dc99"],
+};
+const LAYER = {
+  district: { noun: "districts", title: "Districts", group: "Administrative", label: u => u.n.replace(" District", ""),
+    about: "Taipei’s 12 districts. They are built by merging the 456 villages of the official village map, so every layer built from villages or lin shares exactly the same edges. Subdistricts, statistical areas and zoning are official shapes drawn separately and do not line up exactly.", src: ["village", "postEn"] },
+  village: { noun: "villages", title: "Villages", group: "Administrative",
+    about: "The 456 villages (里, li), the smallest administrative unit with an elected chief, as published by the Civil Affairs Department.", src: ["village", "postEn"] },
+  council_2026: { noun: "constituencies", title: "City Council constituencies", group: "Elections", label: u => u.n.replace("Council constituency ", ""),
+    about: "Six geographic constituencies for the 28 November 2026 Taipei City Council election, each made of two whole districts. Constituencies 7 and 8 elect lowland and highland Indigenous councillors from the whole city and are not drawn.", src: ["council", "cecdb"] },
+  legislator: { noun: "constituencies", title: "Legislative constituencies", group: "Elections", label: u => u.n.replace("Legislative constituency ", ""),
+    about: "Eight constituencies for the Legislative Yuan, assigned village by village from the 2024 election results database and checked against the 2015 gazette for the three districts that are split. No change for 2028 has been announced.", src: ["cecdb", "gazette", "village"] },
+  polling_2026: { noun: "polling stations", title: "Polling-station areas", group: "Elections",
+    about: "The area served by each of the 1,790 polling stations for the 28 November 2026 local elections, built from the lin (鄰, neighbourhoods) the official notice lists for each station. Every station serves part or all of one village. Hatched areas are places the official data cannot assign: one lin missing from the notice, one lin polygon that the notice splits between two stations, slivers where the lin map and the village map disagree, and hairline gaps in the village map that lie between two stations.", src: ["polls", "pollsfix", "lin", "village"] },
+  school_elementary: { noun: "zones", title: "Elementary school zones", group: "Schools",
+    about: "School zones for the 2026–27 school year, built from the Department of Education’s table of villages and lin. Where several schools are listed for the same lin the zone is shared and families choose among them. In Chaoyang Village (Datong) two schools each list some lin as their own sole zone; those are marked as conflicting. One lin in Futai Village (Xinyi) is not in the table.", src: ["school", "lin", "village"] },
+  school_junior_high: { noun: "zones", title: "Junior high school zones", group: "Schools",
+    about: "Junior high school zones for the 2026–27 school year, built the same way as the elementary zones. Nine rows of the table cover parts of New Taipei City (Xizhi, Tamsui) served by four Taipei schools; those areas are outside this map.", src: ["school", "lin", "village"] },
+  police_precinct: { noun: "precincts", title: "Police precincts", group: "Public safety", label: u => u.n.replace(" Precinct", ""),
+    about: "Fourteen precincts, built from the villages that each precinct’s police stations list on their websites. Daan Precinct lists no villages, but every village outside Da’an District is claimed by another precinct, so Daan Precinct covers Da’an District.", src: ["police", "village"] },
+  police_station: { noun: "police stations", title: "Police station areas", group: "Public safety",
+    about: "Areas of 83 police stations, from the village lists on the precinct websites. Three villages in Zhongshan District are listed by two stations and shown as shared. Daan Precinct’s seven stations publish no village lists, so Da’an District is left blank. Four village names misspelled on the websites were matched to the official names (富永→富水, 楊雅→揚雅, 糖部→糖蔀, 集劍潭→劍潭).", src: ["police", "village"] },
+  fire_brigade: { noun: "battalions", title: "Fire & EMS battalions", group: "Public safety", label: u => u.n.replace("Fire & EMS battalion ", ""),
+    about: "The fire department’s four disaster-rescue and EMS battalions, each covering three whole districts. Company and squad areas are not published.", src: ["fire"] },
+  court_district: { noun: "courts", title: "District courts", group: "Courts", label: u => u.n.replace("Taiwan ", "").replace(" District Court", ""),
+    about: "Taipei is split between two district courts. Each court’s area is the union of the areas its summary courts serve in the Judicial Yuan’s court directory.", src: ["court"] },
+  court_summary: { noun: "summary courts", title: "Summary courts", group: "Courts", label: u => u.n.replace(" Summary Division", "").replace(" Summary Court", ""),
+    about: "Summary courts handle small claims and minor criminal cases. Wenshan District is served by the Xindian Summary Division, located in New Taipei City. We found no official English name for the Neihu summary court (內湖簡易庭).", src: ["court"] },
+  sanitation: { noun: "teams", title: "Sanitation teams", group: "City services", label: u => u.n.replace(" District sanitation team", ""),
+    about: "The Department of Environmental Protection runs one sanitation team for each district. Squad-level areas are published for only some districts and are not mapped.", src: ["sanitation"] },
+  health_center: { noun: "health centers", title: "Health centers", group: "City services", label: u => u.n.replace(" District health center", ""),
+    about: "Each district health center handles public-health services for its own district.", src: ["health"] },
+  postal3: { noun: "codes", title: "Postal codes (3-digit)", group: "City services", label: u => u.n.replace("Postal code ", ""),
+    about: "Chunghwa Post’s 3-digit codes: one per district in Taipei. Full 3+3 codes are published as address ranges, not areas, so they are not mapped.", src: ["post"] },
+  subdistrict: { noun: "subdistricts", title: "Subdistricts", group: "Statistics & planning",
+    about: "68 subdistricts published by the Civil Affairs Department and shown as published. They mostly follow village lines but not exactly: nine villages lie less than 99% inside a single subdistrict.", src: ["sub"] },
+  segis_l2: { noun: "areas", title: "Statistical areas (level 2)", group: "Statistics & planning",
+    about: "907 level-2 statistical areas from the Ministry of the Interior, shown as published. They use 2015 boundaries, so their outline differs from the 2026 village map by about 1.6 km², mostly along the rivers.", src: ["segis"] },
+  zoning_heritage: { noun: "polygons", title: "Heritage zones", group: "Statistics & planning", patch: true,
+    about: "Urban-plan zones whose names mark preservation: preservation zones, historic-monument zones, settlement-preservation zones and the historic settlement special zone. These are zoning parcels, not named historic districts. Zoom in to see them.", src: ["zoning"] },
+  zoning_industrial: { noun: "polygons", title: "Industrial zones", group: "Statistics & planning", patch: true,
+    about: "Urban-plan industrial zones (zone codes starting with I): Industrial Zones 2 and 3, technology industrial zones A–D, and strategic, auto-repair, software and industrial-service zones. Special-purpose ‘industry’ zones with D codes are not included.", src: ["zoning"] },
+};
+const ORDER = ["district", "village", "council_2026", "legislator", "polling_2026", "school_elementary", "school_junior_high",
+  "police_precinct", "police_station", "fire_brigade", "court_district", "court_summary", "sanitation", "health_center",
+  "postal3", "subdistrict", "segis_l2", "zoning_heritage", "zoning_industrial"];
+const OFFICIAL = ["subdistrict", "segis_l2", "zoning_heritage", "zoning_industrial"];
+const NULLS = new Set(["Not determined", "Station not published"]);
+
+const $ = id => document.getElementById(id);
+const fmtInt = d3.format(",");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const hasCJK = s => /[㐀-鿿]/.test(s || "");
+
+let U, OV, FEAT = {}, BOX = {}, LAYERS, proj, path, zoom, svg, gZoom, transform = d3.zoomIdentity;
+let BASEMAP = {}, METRO = [], POP_MONTH = "", CITY_POP = 0;
+const state = { layer: "district", sel: null, prev: null, point: null, shade: false };
+const BREAKS = [5000, 15000, 25000, 40000];  // residents per km², fixed so layers can be compared
+const NOPOP = {
+  lin: "Population is not shown for this layer: its zones are drawn from lin (neighbourhoods), and lin-level population is not published as open data.",
+  shape: "Population is not shown for this layer: its shapes do not follow village lines, so village population cannot be summed exactly.",
+};
+const NOPOP_LAYER = { polling_2026: "lin", school_elementary: "lin", school_junior_high: "lin", subdistrict: "shape", segis_l2: "shape", zoning_heritage: "shape", zoning_industrial: "shape" };
+const hasPop = l => U[l].some(u => u.pop != null);
+const density = u => u.pop != null && u.km2 > 0 ? u.pop / u.km2 : null;
+const shadeOn = (l, i) => state.shade && U[l][i].pop != null && !NULLS.has(U[l][i].n);
+const densClass = d => d == null ? 0 : 1 + BREAKS.filter(b => d >= b).length;
+
+function fmtArea(km2) {
+  if (km2 == null) return "";
+  return km2 >= 0.1 ? `${km2.toLocaleString("en", { maximumFractionDigits: 2 })} km²` : `${fmtInt(Math.round(km2 * 1e6))} m²`;
+}
+function fmtPct(bp) {
+  const p = bp / 100;
+  if (p >= 99.95) return "100%";
+  if (p < 0.1) return "<0.1%";
+  return (p >= 10 ? p.toFixed(0) : p.toFixed(1)) + "%";
+}
+function isNull(layer, i) { return NULLS.has(U[layer][i].n); }
+function countUnits(l) {
+  const real = U[l].filter(u => !NULLS.has(u.n));
+  return l === "police_station" ? real.filter(u => !u.n.includes(" / ")).length : real.length;
+}
+function countText(l) {
+  const n = countUnits(l), m = LAYER[l];
+  if (l === "police_station") return `${fmtInt(n)} police stations, plus 3 villages shared by two stations`;
+  if (l === "school_elementary") return `${fmtInt(n)} zones for 140 schools`;
+  if (l === "school_junior_high") return `${fmtInt(n)} zones for 72 schools`;
+  return `${fmtInt(n)} ${m.noun}`;
+}
+function nameHTML(u) { return hasCJK(u.n) ? `<span class="zh">${esc(u.n)}</span>` : esc(u.n); }
+
+// ---------- geometry helpers (planar TWD97 coordinates)
+function bbox(geom) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const polys = geom.type === "Polygon" ? [geom.coordinates] : geom.type === "MultiPolygon" ? geom.coordinates : [];
+  for (const p of polys) for (const [x, y] of p[0]) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return [x0, y0, x1, y1];
+}
+function inRing(x, y, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function contains(geom, x, y) {
+  const polys = geom.type === "Polygon" ? [geom.coordinates] : geom.type === "MultiPolygon" ? geom.coordinates : [];
+  for (const p of polys) {
+    if (!inRing(x, y, p[0])) continue;
+    let hole = false;
+    for (let k = 1; k < p.length; k++) if (inRing(x, y, p[k])) { hole = true; break; }
+    if (!hole) return true;
+  }
+  return false;
+}
+function unitAt(layer, x, y) {
+  const f = FEAT[layer], b = BOX[layer];
+  for (let i = 0; i < f.length; i++) {
+    const bb = b[i];
+    if (x < bb[0] || x > bb[2] || y < bb[1] || y > bb[3]) continue;
+    if (f[i].geometry && contains(f[i].geometry, x, y)) return i;
+  }
+  return -1;
+}
+
+// ---------- layer list
+function buildLayerList() {
+  const nav = $("layers"), sel = $("layer-sel");
+  let html = '<h2 style="padding:6px 8px 0">Layers</h2>', group = null, opt = "";
+  for (const l of ORDER) {
+    const m = LAYER[l], n = countUnits(l);
+    if (m.group !== group) {
+      if (group) html += "</div>";
+      html += `<div class="group" role="group" aria-label="${esc(m.group)}"><div class="section-label">${esc(m.group)}</div>`;
+      if (group) opt += "</optgroup>";
+      opt += `<optgroup label="${esc(m.group)}">`;
+      group = m.group;
+    }
+    html += `<button class="layer-btn" data-layer="${l}" aria-pressed="false"><span>${esc(m.title)}</span><span class="count">${fmtInt(n)}</span></button>`;
+    opt += `<option value="${l}">${esc(m.title)} (${fmtInt(n)})</option>`;
+  }
+  nav.innerHTML = html + "</div>";
+  sel.innerHTML = opt + "</optgroup>";
+  nav.addEventListener("click", e => { const b = e.target.closest(".layer-btn"); if (b) setLayer(b.dataset.layer, true); });
+  sel.addEventListener("change", () => setLayer(sel.value, true));
+}
+
+// ---------- drawing
+function drawLayer() {
+  const l = state.layer, m = LAYER[l], feats = FEAT[l];
+  const sparse = feats.length <= 20;
+  const g = d3.select("#units");
+  g.selectAll("path").remove();
+  g.selectAll("path").data(feats).join("path")
+    .attr("class", (f, i) => "unit" + (isNull(l, i) ? " null" : "") + (m.patch ? " patch" : "") + (sparse ? " sparse" : "") + (shadeOn(l, i) ? " shaded" : ""))
+    .attr("style", (f, i) => shadeOn(l, i) ? `fill: var(--d${densClass(density(U[l][i]))})` : null)
+    .attr("d", path)
+    .on("pointermove", (ev, f) => showTip(ev, l, f.properties.i))
+    .on("pointerleave", hideTip)
+    .on("click", (ev, f) => {
+      const [px, py] = d3.pointer(ev, svg.node());
+      const [x, y] = proj.invert(transform.invert([px, py]));
+      state.point = [x, y];
+      select(l, f.properties.i, false);
+    });
+  // context: district lines, except on layers whose own lines already include them
+  const ctxOff = ["district", "council_2026", "fire_brigade", "court_district", "court_summary", "sanitation", "health_center", "postal3", "police_precinct", "legislator"];
+  d3.select("#ctx").attr("d", ctxOff.includes(l) ? null : path(FEAT.districtMesh));
+  drawLabels();
+  drawLegend();
+}
+function drawLabels() {
+  const l = state.layer, m = LAYER[l];
+  const lab = d3.select("#labels");
+  lab.selectAll("text").remove();
+  if (!m.label || FEAT[l].length > 20) return;
+  const data = FEAT[l].map((f, i) => {
+    let geom = f.geometry;
+    if (geom.type === "MultiPolygon") { // label the largest part
+      let best = null, ba = -1;
+      for (const c of geom.coordinates) { const g1 = { type: "Polygon", coordinates: c }; const a = path.area(g1); if (a > ba) { ba = a; best = g1; } }
+      geom = best;
+    }
+    return { c: path.centroid(geom), t: m.label(U[l][i]), zh: hasCJK(m.label(U[l][i])) };
+  });
+  lab.selectAll("text").data(data).join("text").attr("class", d => "lbl" + (d.zh ? " zh" : "")).text(d => d.t);
+  placeLabels();
+}
+function placeLabels() {
+  placeMetro();
+  d3.select("#labels").selectAll("text").attr("x", d => transform.applyX(d.c[0])).attr("y", d => transform.applyY(d.c[1]));
+  if (state.point) {
+    const p = proj(state.point);
+    d3.select("#pin").attr("cx", transform.applyX(p[0])).attr("cy", transform.applyY(p[1])).attr("hidden", null);
+  } else d3.select("#pin").attr("hidden", "");
+}
+function drawLegend() {
+  const l = state.layer, hasNull = U[l].some(u => NULLS.has(u.n));
+  let html = `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:${LAYER[l].patch ? "var(--line)" : "none"};fill-opacity:.1;stroke:var(--line)"></rect></svg>${esc(LAYER[l].title)}</div>`;
+  if (hasNull) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:url(#hatch);stroke:var(--null)"></rect></svg>Not determined from official data</div>`;
+  if (state.sel) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:var(--accent-soft);stroke:var(--accent);stroke-width:2"></rect></svg>Selected</div>`;
+  if (state.prev) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3"></rect></svg>Earlier selection</div>`;
+  html += `<div class="row" style="color:var(--ink-3)"><svg width="22" height="12"><rect x="1" y="2" width="9" height="8" style="fill:var(--water)"></rect><rect x="12" y="2" width="9" height="8" style="fill:var(--road);stroke:var(--rule)"></rect></svg>River zones, roads &gt; 8 m <svg width="12" height="12"><circle cx="6" cy="6" r="3" class="metro"></circle></svg>MRT</div>`;
+  if (hasPop(l)) {
+    html += `<label class="row" for="shade"><input type="checkbox" id="shade"${state.shade ? " checked" : ""}> Shade by population density</label>`;
+    if (state.shade) html += `<div><div class="scale">${[1, 2, 3, 4, 5].map(k => `<span style="background:var(--d${k})"></span>`).join("")}</div>
+      <div class="ticks"><span>0</span>${BREAKS.map(b => `<span>${b / 1000}k</span>`).join("")}</div>
+      <div class="ticks" style="display:block">residents per km², ${esc(POP_MONTH)}</div></div>`;
+  }
+  $("legend").innerHTML = html;
+  const cb = $("shade"); if (cb) cb.onchange = () => setShade(cb.checked);
+}
+function drawBase() {
+  d3.select("#water").attr("d", path(BASEMAP.water));
+  d3.select("#roads").attr("d", path(BASEMAP.roads));
+}
+function placeMetro() {
+  const g = d3.select("#metro"), k = transform.k;
+  const pts = METRO.map(([x, y, n]) => { const p = proj([x, y]); return { x: transform.applyX(p[0]), y: transform.applyY(p[1]), n }; });
+  g.selectAll("circle").data(pts).join("circle").attr("class", "metro").attr("r", k >= 2.5 ? 3.5 : 2.5).attr("cx", d => d.x).attr("cy", d => d.y);
+  g.selectAll("text").data(k >= 2.5 ? pts : []).join("text").attr("class", "metro-lbl").attr("x", d => d.x + 6).attr("y", d => d.y + 3.5).text(d => d.n);
+}
+function drawSelection() {
+  const s = state.sel, p = state.prev;
+  d3.select("#sel").attr("d", s ? path(FEAT[s.layer][s.i]) : null);
+  d3.select("#prev").attr("d", p ? path(FEAT[p.layer][p.i]) : null);
+  placeLabels();
+  drawLegend();
+}
+
+// ---------- tooltip
+function showTip(ev, l, i) {
+  const u = U[l][i], tip = $("tip"), r = $("mapbox").getBoundingClientRect();
+  tip.innerHTML = `<div>${nameHTML(u)}</div>${u.s ? `<div class="t-sub">${hasCJK(u.s) ? `<span class="zh">${esc(u.s)}</span>` : esc(u.s)}</div>` : ""}${u.pop != null ? `<div class="t-sub num">${fmtInt(u.pop)} residents · ${fmtInt(Math.round(density(u)))} per km²</div>` : ""}`;
+  tip.hidden = false;
+  let x = ev.clientX - r.left + 14, y = ev.clientY - r.top + 14;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  if (x + w > r.width - 8) x = ev.clientX - r.left - w - 14;
+  if (y + h > r.height - 8) y = ev.clientY - r.top - h - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip() { $("tip").hidden = true; }
+
+// ---------- panel
+function sourcesHTML(keys) {
+  return `<div class="section-label">Sources</div><ul class="sources">${keys.map(k => `<li><a href="${esc(SRC[k][1])}" target="_blank" rel="noopener">${esc(SRC[k][0])}</a></li>`).join("")}</ul>`;
+}
+function renderLayerInfo() {
+  const l = state.layer, m = LAYER[l];
+  $("panel").innerHTML = `
+    <div><div class="kicker">${esc(m.group)}</div><h3>${esc(m.title)}</h3></div>
+    <p class="num">${countText(l)}${OFFICIAL.includes(l) ? " · official shapes, shown as published" : ""}</p>
+    <p>${esc(m.about)}</p>
+    <p class="hint">${hasPop(l) ? `Population (${esc(POP_MONTH)}) is shown for every unit; it is the exact sum of its villages. Use the legend to shade the map by density.` : esc(NOPOP[NOPOP_LAYER[l]] || "")}</p>
+    ${state.prev ? `<p class="hint">Your earlier selection, ${nameHTML(U[state.prev.layer][state.prev.i])} (${esc(LAYER[state.prev.layer].title)}), stays outlined with a dashed line.</p>` : ""}
+    <p class="hint">Click an area on the map, or search for a name above.</p>
+    <div>${sourcesHTML(hasPop(l) ? [...m.src, "pop"] : m.src)}</div>`;
+}
+function renderUnit() {
+  const { layer: l, i } = state.sel, u = U[l][i], m = LAYER[l];
+  const showZh = u.z && u.z !== u.n;
+  const attrs = (u.a || []).map(([k, v]) => `<dt>${esc(k)}</dt><dd${hasCJK(v) ? ' class="zh"' : ""}>${esc(v)}</dd>`).join("");
+  let html = `
+    <div class="card-head"><div>
+      <div class="kicker">${esc(m.title)}</div>
+      <h3>${nameHTML(u)}</h3>
+      ${showZh ? `<div class="zhname">${esc(u.z)}</div>` : ""}
+      ${u.s ? `<div class="sub${hasCJK(u.s) ? " zh" : ""}">${esc(u.s)}</div>` : ""}
+    </div><button class="x" id="x" aria-label="Close and show the layer description">×</button></div>
+    ${u.x ? `<div class="note">${esc(u.x)}</div>` : ""}
+    ${popHTML(l, u)}
+    <dl class="attrs num">${attrs}<dt>Area</dt><dd>${fmtArea(u.km2)}</dd></dl>`;
+  html += renderOverlaps(l, i);
+  html += `<button class="clear" id="clear">Clear selection</button>`;
+  $("panel").innerHTML = html;
+  const clear = () => { state.prev = state.sel = null; state.point = null; drawSelection(); renderLayerInfo(); };
+  $("clear").onclick = clear;
+  $("x").onclick = clear;
+  $("panel").querySelectorAll(".ov-item").forEach(b => {
+    b.addEventListener("mouseenter", () => peek(b.dataset.l, +b.dataset.i));
+    b.addEventListener("mouseleave", () => peek(null));
+    b.addEventListener("focus", () => peek(b.dataset.l, +b.dataset.i));
+    b.addEventListener("blur", () => peek(null));
+    b.addEventListener("click", () => { peek(null); goTo(b.dataset.l, +b.dataset.i); });
+  });
+  $("panel").querySelectorAll(".ov-more").forEach(b => b.addEventListener("click", () => {
+    b.parentElement.querySelectorAll(".ov-item[hidden]").forEach(x => x.hidden = false); b.remove();
+  }));
+}
+function popHTML(l, u) {
+  if (u.pop != null) {
+    const share = u.pop / CITY_POP * 100;
+    return `<div><div class="pop">
+      <div><div class="v">${fmtInt(u.pop)}</div><div class="k">residents</div></div>
+      <div><div class="v">${fmtInt(u.hh)}</div><div class="k">households</div></div>
+      <div><div class="v">${fmtInt(Math.round(density(u)))}</div><div class="k">per km²</div></div></div>
+      <p class="hint" style="margin-top:6px">${share >= 0.1 ? share.toFixed(1) : "<0.1"}% of Taipei’s residents. Household registration, ${esc(POP_MONTH)}.</p></div>`;
+  }
+  return NOPOP_LAYER[l] && !isNull(l, state.sel.i) ? `<p class="hint">${esc(NOPOP[NOPOP_LAYER[l]])}</p>` : "";
+}
+function renderOverlaps(l, i) {
+  const rows = OV[l][i] || [];
+  const here = {};
+  if (state.point) for (const L of ORDER) if (L !== l) here[L] = unitAt(L, state.point[0], state.point[1]);
+  const by = {};
+  for (const [li, j, sSelf, sOther] of rows) (by[LAYERS[li]] ||= []).push({ j, sSelf, sOther });
+  if (state.point) for (const L of ORDER) if (L !== l && here[L] >= 0 && !(by[L] || []).some(r => r.j === here[L])) (by[L] ||= []).push({ j: here[L], sSelf: null, sOther: null });
+  const blocks = ORDER.filter(L => L !== l && by[L]).map(L => {
+    const items = by[L].sort((a, b) => (b.j === here[L]) - (a.j === here[L]) || (b.sSelf ?? -1) - (a.sSelf ?? -1));
+    const LIM = 6;
+    const html = items.map((r, k) => {
+      const u = U[L][r.j];
+      const pct = r.sSelf == null ? "" : `<span class="pct" title="${esc(fmtPct(r.sSelf))} of the selected area lies in this unit; it is ${esc(fmtPct(r.sOther))} of this unit">${fmtPct(r.sSelf)}</span>`;
+      return `<button class="ov-item" data-l="${L}" data-i="${r.j}"${k >= LIM ? " hidden" : ""}><span>${nameHTML(u)}${r.j === here[L] ? '<span class="here">● here</span>' : ""}</span>${pct}</button>`;
+    }).join("");
+    const more = items.length > LIM ? `<button class="ov-more">Show all ${items.length}</button>` : "";
+    return `<div class="ov-layer"><div class="ov-name">${esc(LAYER[L].title)}</div>${html}${more}</div>`;
+  }).join("");
+  if (!blocks) return isNull(l, i) ? "" : `<p class="hint">No overlaps with other layers.</p>`;
+  return `<div><div class="section-label" style="margin-bottom:6px">Overlaps with other layers</div>
+    <p class="hint" style="margin-bottom:10px">Percent of the selected area that falls in each unit.${state.point ? " ● marks the unit at the spot you clicked." : ""}</p>
+    <div class="ov">${blocks}</div></div>`;
+}
+function peek(L, j) { d3.select("#peek").attr("d", L ? path(FEAT[L][j]) : null); }
+
+// ---------- actions
+function setLayer(l, keepSel) {
+  if (!LAYER[l]) return;
+  if (state.sel && state.sel.layer !== l) { state.prev = state.sel; state.sel = null; }
+  state.layer = l;
+  document.querySelectorAll(".layer-btn").forEach(b => b.setAttribute("aria-pressed", b.dataset.layer === l));
+  $("layer-sel").value = l;
+  try { history.replaceState(null, "", "#" + l); } catch (e) {}
+  drawLayer();
+  drawSelection();
+  if (!state.sel) renderLayerInfo();
+}
+function setShade(on) {
+  state.shade = on;
+  drawLayer();
+  drawSelection();
+}
+function select(l, i, zoomTo) {
+  if (state.sel && state.sel.layer !== l) state.prev = state.sel;
+  if (state.prev && state.prev.layer === l) state.prev = null;
+  state.sel = { layer: l, i };
+  drawSelection();
+  renderUnit();
+  if (zoomTo) zoomToFeature(FEAT[l][i]);
+}
+function goTo(l, i) {
+  const keepPrev = state.sel;
+  if (l !== state.layer) { state.layer = l; setLayer(l, false); }
+  state.prev = keepPrev && keepPrev.layer !== l ? keepPrev : null;
+  state.sel = null;
+  select(l, i, true);
+}
+function zoomToFeature(f) {
+  const [[x0, y0], [x1, y1]] = path.bounds(f);
+  const r = $("map").getBoundingClientRect();
+  const pr = $("panel").getBoundingClientRect();
+  const floating = getComputedStyle($("panel")).position === "absolute";
+  const w = floating ? Math.max(200, pr.left - r.left - 14) : r.width;  // visible map width left of the panel
+  const k = Math.max(1, Math.min(16, 0.55 / Math.max((x1 - x0) / w, (y1 - y0) / r.height)));
+  const t = d3.zoomIdentity.translate(w / 2, r.height / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+  svg.transition().duration(matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 600).call(zoom.transform, t);
+}
+
+// ---------- search
+let INDEX = [];
+function buildIndex() {
+  for (const l of ORDER) U[l].forEach((u, i) => {
+    if (NULLS.has(u.n)) return;
+    INDEX.push({ l, i, t: [u.n, u.z, u.s, ...(u.a || []).map(a => a[1])].filter(Boolean).join(" ").toLowerCase() });
+  });
+}
+function runSearch() {
+  const q = $("q").value.trim().toLowerCase(), box = $("results");
+  if (!q) { box.hidden = true; return; }
+  const words = q.split(/\s+/);
+  const hits = INDEX.filter(e => words.every(w => e.t.includes(w))).slice(0, 40);
+  box.innerHTML = hits.length ? hits.map(h => {
+    const u = U[h.l][h.i];
+    return `<button data-l="${h.l}" data-i="${h.i}"><span class="r-layer">${esc(LAYER[h.l].title)}</span><span>${nameHTML(u)}${u.z && u.z !== u.n ? ` <span class="zh" style="color:var(--ink-2)">${esc(u.z)}</span>` : ""}</span></button>`;
+  }).join("") : `<div class="empty">No match. Try an English or Chinese name.</div>`;
+  box.hidden = false;
+}
+
+// ---------- start
+async function start() {
+  const [aligned, city, units, ov, roads, water, metro, ...off] = await Promise.all(
+    ["aligned.topo.json", "city.topo.json", "units.json", "overlaps.json", "roads.topo.json", "water.topo.json", "metro.json", ...OFFICIAL.map(l => `${l}.topo.json`)]
+      .map(f => fetch("data/" + f).then(r => { if (!r.ok) throw new Error(f + " " + r.status); return r.json(); })));
+  U = units.units; LAYERS = units.layers; OV = ov; POP_MONTH = units.popMonth; CITY_POP = units.cityPop;
+  BASEMAP.roads = topojson.feature(roads, roads.objects.roads);
+  BASEMAP.water = topojson.feature(water, water.objects.water);
+  METRO = metro;
+  for (const l of ORDER) {
+    const topo = OFFICIAL.includes(l) ? off[OFFICIAL.indexOf(l)] : aligned;
+    const fc = topojson.feature(topo, topo.objects[l]);
+    const arr = new Array(U[l].length);
+    for (const f of fc.features) arr[f.properties.i] = f;
+    if (arr.some(f => !f)) throw new Error("missing features in " + l);
+    FEAT[l] = arr;
+    BOX[l] = arr.map(f => bbox(f.geometry));
+  }
+  FEAT.districtMesh = topojson.mesh(aligned, aligned.objects.district, (a, b) => a !== b);
+  const cityF = topojson.feature(city, city.objects.district);
+
+  svg = d3.select("#map");
+  gZoom = d3.select("#zoomg");
+  const fit = () => {
+    const r = $("map").getBoundingClientRect();
+    proj = d3.geoIdentity().reflectY(true).fitExtent([[24, 24], [Math.max(r.width - 24, 25), Math.max(r.height - 24, 25)]], cityF);
+    path = d3.geoPath(proj);
+    d3.select("#land").attr("d", path(cityF));
+    d3.select("#edge").attr("d", path(cityF));
+    drawBase();
+  };
+  fit();
+  zoom = d3.zoom().scaleExtent([1, 60]).on("zoom", ev => {
+    transform = ev.transform;
+    gZoom.attr("transform", transform);
+    placeLabels();
+    hideTip();
+  });
+  svg.call(zoom).on("dblclick.zoom", null);
+  $("zin").onclick = () => svg.transition().duration(250).call(zoom.scaleBy, 1.6);
+  $("zout").onclick = () => svg.transition().duration(250).call(zoom.scaleBy, 1 / 1.6);
+  $("zreset").onclick = () => svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
+
+  buildLayerList();
+  buildIndex();
+  const h = (location.hash || "").slice(1);
+  setLayer(LAYER[h] ? h : "district", false);
+  $("loading").hidden = true;
+
+  let rt;
+  new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { fit(); drawLayer(); drawSelection(); }, 120); }).observe($("map"));
+
+  $("q").addEventListener("input", runSearch);
+  $("q").addEventListener("keydown", e => { if (e.key === "Escape") { $("q").value = ""; runSearch(); } if (e.key === "Enter") { const b = $("results").querySelector("button"); if (b) b.click(); } });
+  $("results").addEventListener("click", e => {
+    const b = e.target.closest("button[data-l]"); if (!b) return;
+    $("results").hidden = true; $("q").value = "";
+    state.point = null;
+    goTo(b.dataset.l, +b.dataset.i);
+  });
+  document.addEventListener("click", e => { if (!e.target.closest(".search")) $("results").hidden = true; });
+}
+start().catch(err => { $("loading").textContent = "The map data could not be loaded. " + err.message; console.error(err); });
+</script>
+</body>
+</html>
