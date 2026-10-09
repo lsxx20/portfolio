@@ -169,7 +169,8 @@ svg.map { position: relative; }
 .ctx { fill: none; stroke: var(--line-faint); stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
 .water { fill: var(--water); pointer-events: none; }
 .roads { fill: var(--road); pointer-events: none; }
-.metro { fill: var(--panel); stroke: var(--metro); stroke-width: 1.5; pointer-events: none; }
+.metro { fill: var(--ink-3); pointer-events: none; }
+.has-tiles .metro { stroke: var(--panel); stroke-width: 1; }
 .metro-lbl { font-size: 10.5px; fill: var(--ink-2); paint-order: stroke; stroke: var(--land); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; font-family: var(--zh); }
 .fac { fill: var(--ink); stroke: var(--panel); stroke-width: 1.5; cursor: pointer; }
 .fac.on { fill: var(--accent); stroke: var(--panel); stroke-width: 2; }
@@ -202,6 +203,8 @@ svg.map { position: relative; }
   display: grid; gap: 5px; font-size: 12px; color: var(--ink-2); max-width: calc(100% - 28px); }
 .legend .row { display: flex; gap: 8px; align-items: center; }
 .legend label.row { cursor: pointer; color: var(--ink); }
+.legend .metro-key { display: inline-flex; gap: 8px; align-items: center; }
+.legend .metro-key[hidden] { display: none; }
 .legend .scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; margin-top: 2px; }
 .legend .scale span { height: 8px; border-radius: 1px; }
 .legend .ticks { display: grid; grid-template-columns: repeat(5, 1fr); font-size: 10.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
@@ -582,9 +585,10 @@ function drawLegend() {
   if (hasNull) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:url(#hatch);stroke:var(--null)"></rect></svg>Not determined from official data</div>`;
   if (state.sel) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:var(--accent-soft);stroke:var(--accent);stroke-width:2"></rect></svg>Selected</div>`;
   const bm = BASEMAPS[state.base];
+  const mrt = `<svg width="12" height="12"><circle cx="6" cy="6" r="3" class="metro"></circle></svg>MRT`, hide = metroLevel() ? "" : " hidden";
   html += bm.url
-    ? `<div class="row" style="color:var(--ink-3)"><svg width="12" height="12"><circle cx="6" cy="6" r="3" class="metro"></circle></svg>MRT</div>`
-    : `<div class="row" style="color:var(--ink-3)"><svg width="22" height="12"><rect x="1" y="2" width="9" height="8" style="fill:var(--water)"></rect><rect x="12" y="2" width="9" height="8" style="fill:var(--road);stroke:var(--rule)"></rect></svg>River zones, roads &gt; 8 m <svg width="12" height="12"><circle cx="6" cy="6" r="3" class="metro"></circle></svg>MRT</div>`;
+    ? `<div class="row metro-key" style="color:var(--ink-3)"${hide}>${mrt}</div>`
+    : `<div class="row" style="color:var(--ink-3)"><svg width="22" height="12"><rect x="1" y="2" width="9" height="8" style="fill:var(--water)"></rect><rect x="12" y="2" width="9" height="8" style="fill:var(--road);stroke:var(--rule)"></rect></svg>River zones, roads &gt; 8 m <span class="metro-key"${hide}>${mrt}</span></div>`;
   if (FAC[l]) html += `<div class="row"><svg width="22" height="12"><rect x="7.5" y="2.5" width="7" height="7" class="fac"></rect></svg>${esc(FAC_KIND[l][2])}</div>`;
   if (hasPop(l)) {
     html += `<label class="row" for="shade"><input type="checkbox" id="shade"${state.shade ? " checked" : ""}> Shade by population density</label>`;
@@ -603,11 +607,21 @@ function drawBase() {
   d3.select("#water").attr("d", path(BASEMAP.water));
   d3.select("#roads").attr("d", path(BASEMAP.roads));
 }
+// MRT stations appear only when zoomed in, like the stations on the NYC Boundaries base map. The thresholds are in
+// metres per screen pixel, so they mean the same on a phone and a desktop: 20 is about where a selected district fills
+// a desktop map, 6 covers a selected village. Never at the whole-city view (k < 1.5), even on a very large screen.
+const METRO_DOTS = 20, METRO_NAMES = 6;
+const metresPerPx = () => 1 / (proj.scale() * transform.k);
+function metroLevel() {  // 0 nothing, 1 dots, 2 dots and names
+  const m = metresPerPx();
+  return transform.k < 1.5 || m > METRO_DOTS ? 0 : m > METRO_NAMES ? 1 : 2;
+}
 function placeMetro() {
-  const g = d3.select("#metro"), k = transform.k;
-  const pts = METRO.map(([x, y, n]) => { const p = proj([x, y]); return { x: transform.applyX(p[0]), y: transform.applyY(p[1]), n }; });
-  g.selectAll("circle").data(pts).join("circle").attr("class", "metro").attr("r", k >= 2.5 ? 3.5 : 2.5).attr("cx", d => d.x).attr("cy", d => d.y);
-  g.selectAll("text").data(k >= 2.5 ? pts : []).join("text").attr("class", "metro-lbl").attr("x", d => d.x + 6).attr("y", d => d.y + 3.5).text(d => d.n);
+  const g = d3.select("#metro"), level = metroLevel();
+  const pts = level ? METRO.map(([x, y, n]) => { const p = proj([x, y]); return { x: transform.applyX(p[0]), y: transform.applyY(p[1]), n }; }) : [];
+  g.selectAll("circle").data(pts).join("circle").attr("class", "metro").attr("r", 3).attr("cx", d => d.x).attr("cy", d => d.y);
+  g.selectAll("text").data(level === 2 ? pts : []).join("text").attr("class", "metro-lbl").attr("x", d => d.x + 6).attr("y", d => d.y + 3.5).text(d => d.n);
+  d3.selectAll("#legend .metro-key").attr("hidden", level ? null : "");
 }
 function drawSelection() {
   const s = state.sel;
@@ -638,7 +652,7 @@ let tileTimer, tileZ = -1, tileKeys = new Set();  // tileKeys: the tiles the cur
 
 function tileView() {
   const bm = BASEMAPS[state.base], r = $("map").getBoundingClientRect();
-  const mpp = 1 / (proj.scale() * transform.k);            // metres per CSS pixel right now
+  const mpp = metresPerPx();
   let z = WMTS.res.findIndex(res => res <= mpp * 1.25);   // coarsest level that is about as sharp as the screen
   if (z < 0) z = WMTS.res.length - 1;
   const [xa, ya] = proj.invert(transform.invert([0, 0])), [xb, yb] = proj.invert(transform.invert([r.width, r.height]));
