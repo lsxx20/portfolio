@@ -171,6 +171,13 @@ svg.map { position: relative; }
 .roads { fill: var(--road); pointer-events: none; }
 .metro { fill: var(--panel); stroke: var(--metro); stroke-width: 1.5; pointer-events: none; }
 .metro-lbl { font-size: 10.5px; fill: var(--ink-2); paint-order: stroke; stroke: var(--land); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; font-family: var(--zh); }
+.fac { fill: var(--ink); stroke: var(--panel); stroke-width: 1.5; cursor: pointer; }
+.fac.on { fill: var(--accent); stroke: var(--panel); stroke-width: 2; }
+.fac-lbl { font-size: 11.5px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: var(--land); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; font-family: var(--zh); }
+.fac-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fac-list li { display: grid; gap: 1px; }
+.fac-list .fac-addr { color: var(--ink-3); font-size: 12.5px; }
+.fac-list .fac-note { color: var(--ink-2); font-size: 12.5px; }
 .unit.shaded { fill-opacity: .82; }
 .unit.shaded:hover { fill-opacity: .6; }
 .unit { fill: transparent; stroke: var(--line); stroke-width: .6; vector-effect: non-scaling-stroke; cursor: pointer; }
@@ -267,8 +274,8 @@ img { max-width: 100%; }
         <ul>
           <li><a href="downloads/taipei_boundaries_geojson.zip" download>All layers as GeoJSON</a><span class="what">20 files, zipped, 4.2 MB</span></li>
           <li><a href="downloads/taipei_boundaries_gpkg.zip" download>All layers as a GeoPackage</a><span class="what">one file, zipped, 7.3 MB</span></li>
-          <li><a href="downloads/taipei_boundaries_tables.zip" download>Village and lin crosswalks, overlap table</a><span class="what">3 CSV files, zipped, 484 KB</span></li>
-          <li><a href="downloads/README_zh.md" download>Methods, sources and known issues</a><span class="what">in Chinese, 22 KB</span></li>
+          <li><a href="downloads/taipei_boundaries_tables.zip" download>Village and lin crosswalks, overlaps, facility locations</a><span class="what">4 CSV files, zipped, 501 KB</span></li>
+          <li><a href="downloads/README_zh.md" download>Methods, sources and known issues</a><span class="what">in Chinese, 25 KB</span></li>
         </ul>
       </details>
       <details class="about" id="about">
@@ -277,6 +284,7 @@ img { max-width: 100%; }
         <p>Shapes are simplified for the web. Overlap percentages use the full-resolution data.</p>
         <p>English names are official where one exists. Labels like “Polling station 0917” are descriptions.</p>
         <p>Population is household registration by village, September 2026, shown only for layers made of whole villages.</p>
+        <p>Squares mark district offices, police, health centers, schools and fire stations. They sit at the official street address, placed with the Civil Affairs Department’s house-number coordinates; fire stations use the Fire Department’s own coordinates.</p>
         <p>Base maps: Simple draws roads wider than 8 m (Public Works Department), river zones (urban-plan zoning map) and MRT stations (Taipei Rapid Transit Corporation). The topographic map and aerial photo (2025) are loaded live from the Taipei City Urban Development Department.</p>
         <p>Methods, sources and known issues: <a href="downloads/README_zh.md">README</a> (in Chinese).</p>
         <p>Inspired by <a href="https://boundaries.beta.nyc/" target="_blank" rel="noopener">NYC Boundaries</a> by BetaNYC.</p>
@@ -306,6 +314,7 @@ img { max-width: 100%; }
         <path class="peek" id="peek"></path>
       </g>
       <g id="metro"></g>
+      <g id="fac"></g>
       <g id="labels"></g>
       <circle class="pin" id="pin" r="5" hidden></circle>
     </svg>
@@ -348,6 +357,12 @@ const SRC = {
   zoning: ["Urban Development Dept.: urban-plan zoning map (file dated 2026-04-09)", DT + "3bab0a01-7936-4218-8cb5-f74dfcb43dda"],
   pop: ["Ministry of the Interior: households and population by village (September 2026)", "https://data.gov.tw/dataset/77132"],
   popCheck: ["Civil Affairs Dept.: population by district (used as a cross-check)", DT + "6a1dbb4e-e99c-4e67-ab09-f6d83852dc99"],
+  addr: ["Civil Affairs Dept.: house-number coordinates (2026-10-02), used to place addresses", DT + "b7c8e724-1e98-45ee-a0bd-f3840623ed97"],
+  agencies: ["Personnel Dept.: addresses of city agencies and schools (2026-10-08)", DT + "6b99dd93-9c63-43c9-96eb-0bfffce97217"],
+  policeUnits: ["Police Dept.: names and addresses of police units (2025-06-09)", DT + "6c41536a-3ce2-4102-bdfc-6b5f3d13ef91"],
+  healthList: ["Dept. of Health: district health centers (2026-09-21)", DT + "d4c6d4e0-c2b4-48e3-99b4-f670d820326b"],
+  fireList: ["Fire Dept.: fire station locations (2026-09-23)", DT + "a9fa2045-f7a6-4e16-ad26-577748064cdf"],
+  eduList: ["Dept. of Education: schools of all levels (2026-09-30)", "https://data.gov.tw/dataset/121225"],
 };
 const LAYER = {
   district: { noun: "districts", title: "Districts", group: "Administrative", label: u => u.n.replace(" District", ""),
@@ -542,6 +557,7 @@ function drawLabels() {
 }
 function placeLabels() {
   placeMetro();
+  placeFacilities();
   d3.select("#labels").selectAll("text").attr("x", d => transform.applyX(d.c[0])).attr("y", d => transform.applyY(d.c[1]));
   declutter();
   if (state.point) {
@@ -569,6 +585,7 @@ function drawLegend() {
   html += bm.url
     ? `<div class="row" style="color:var(--ink-3)"><svg width="12" height="12"><circle cx="6" cy="6" r="3" class="metro"></circle></svg>MRT</div>`
     : `<div class="row" style="color:var(--ink-3)"><svg width="22" height="12"><rect x="1" y="2" width="9" height="8" style="fill:var(--water)"></rect><rect x="12" y="2" width="9" height="8" style="fill:var(--road);stroke:var(--rule)"></rect></svg>River zones, roads &gt; 8 m <svg width="12" height="12"><circle cx="6" cy="6" r="3" class="metro"></circle></svg>MRT</div>`;
+  if (FAC[l]) html += `<div class="row"><svg width="22" height="12"><rect x="7.5" y="2.5" width="7" height="7" class="fac"></rect></svg>${esc(FAC_KIND[l][2])}</div>`;
   if (hasPop(l)) {
     html += `<label class="row" for="shade"><input type="checkbox" id="shade"${state.shade ? " checked" : ""}> Shade by population density</label>`;
     if (state.shade) html += `<div><div class="scale">${[1, 2, 3, 4, 5].map(k => `<span style="background:var(--d${k})"></span>`).join("")}</div>
@@ -692,6 +709,58 @@ function setBase(k) {
   drawLegend();
 }
 
+// ---------- facilities: the office, station or school behind a unit, at its official street address
+const FAC_KIND = {  // [one, several (panel heading), legend]
+  district: ["District office", "District office", "District offices"], police_precinct: ["Precinct headquarters", "Precinct headquarters", "Precinct headquarters"],
+  police_station: ["Police station", "Police stations", "Police stations"], health_center: ["Health center", "Health center", "Health centers"],
+  school_elementary: ["School", "Schools", "Schools"], school_junior_high: ["School", "Schools", "Schools"],
+  fire_brigade: ["Fire station", "Fire stations in this area", "Fire stations"] };
+const FAC_SRC = { district: ["agencies", "addr"], police_precinct: ["policeUnits", "addr"], police_station: ["policeUnits", "addr"],
+  health_center: ["healthList", "addr"], school_elementary: ["eduList", "agencies", "addr"], school_junior_high: ["eduList", "agencies", "addr"],
+  fire_brigade: ["fireList"] };
+let FAC = {};
+const facOf = (l, i) => (FAC[l] && FAC[l].units[i]) || [];
+function placeFacilities() {
+  const l = state.layer, F = FAC[l], g = d3.select("#fac");
+  if (!F) { g.selectAll("*").remove(); return; }
+  const on = new Set(state.sel && state.sel.layer === l ? facOf(l, state.sel.i) : []);
+  const pts = F.pts.map(([x, y, n, a], k) => { const p = proj([x, y]); return { k, x: transform.applyX(p[0]), y: transform.applyY(p[1]), n, a, on: on.has(k) }; });
+  pts.sort((a, b) => a.on - b.on);  // selected ones on top
+  g.selectAll("rect").data(pts, d => d.k).join("rect")
+    .attr("class", d => "fac" + (d.on ? " on" : ""))
+    .attr("width", d => d.on ? 10 : 7).attr("height", d => d.on ? 10 : 7)
+    .attr("x", d => d.x - (d.on ? 5 : 3.5)).attr("y", d => d.y - (d.on ? 5 : 3.5))
+    .on("pointermove", (ev, d) => showFacTip(ev, l, d))
+    .on("pointerleave", hideTip)
+    .on("click", (ev, d) => {  // same as clicking the map at that spot
+      ev.stopPropagation();
+      const [x, y] = F.pts[d.k];
+      const i = unitAt(l, x, y);
+      if (i >= 0) { state.point = [x, y]; select(l, i, false); }
+    })
+    .order();
+  g.selectAll("text").data(pts.filter(d => d.on), d => d.k).join("text")
+    .attr("class", "fac-lbl").attr("x", d => d.x + 9).attr("y", d => d.y + 4).text(d => d.n);
+}
+function showFacTip(ev, l, d) {
+  const tip = $("tip"), r = $("mapbox").getBoundingClientRect();
+  tip.innerHTML = `<div class="zh">${esc(d.n)}</div><div class="t-sub">${esc(FAC_KIND[l][0])}</div><div class="t-sub zh">${esc(d.a)}</div>`;
+  tip.hidden = false;
+  let x = ev.clientX - r.left + 14, y = ev.clientY - r.top + 14;
+  if (x + tip.offsetWidth > r.width - 8) x = ev.clientX - r.left - tip.offsetWidth - 14;
+  if (y + tip.offsetHeight > r.height - 8) y = ev.clientY - r.top - tip.offsetHeight - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function facHTML(l, i) {
+  const F = FAC[l]; if (!F) return "";
+  const ids = facOf(l, i), missing = (F.missing && F.missing[i]) || [], out = new Set(F.outside || []);
+  if (!ids.length && !missing.length) return "";
+  const many = ids.length + missing.length > 1;
+  const items = ids.map(k => `<li><span class="zh">${esc(F.pts[k][2])}</span><span class="fac-addr zh">${esc(F.pts[k][3])}</span>${out.has(k) ? `<span class="fac-note">Stands outside the area it serves</span>` : ""}</li>`)
+    .concat(missing.map(n => `<li><span class="zh">${esc(n)}</span><span class="fac-note">Not on the map: its address is not in the house-number data</span></li>`));
+  return `<div><div class="section-label" style="margin-bottom:6px">${esc(FAC_KIND[l][many ? 1 : 0])}</div><ul class="fac-list">${items.join("")}</ul></div>`;
+}
+
 // ---------- tooltip
 function showTip(ev, l, i) {
   const u = U[l][i], tip = $("tip"), r = $("mapbox").getBoundingClientRect();
@@ -716,9 +785,10 @@ function renderLayerInfo() {
     <p class="num">${countText(l)}</p>
     <p>${esc(m.about)}</p>
     <p class="hint">${hasPop(l) ? `Population: ${esc(POP_MONTH)}, summed from villages. Shade by density in the legend.` : esc(NOPOP[NOPOP_LAYER[l]] || "")}</p>
+    ${FAC[l] ? `<p class="hint">Squares mark ${l === "fire_brigade" ? "the fire stations, at the Fire Department’s coordinates" : "each " + FAC_KIND[l][0].toLowerCase() + ", at its official street address"}.</p>` : ""}
     <p class="hint">Click an area on the map, or search for a name above.</p>
     ${DOWNLOADS && DOWNLOADS[l] ? `<p class="hint"><a href="${esc(DOWNLOADS[l][0])}" download>Download this layer</a> (GeoJSON, zipped, ${esc(DOWNLOADS[l][1])})</p>` : ""}
-    <div>${sourcesHTML(hasPop(l) ? [...m.src, "pop"] : m.src)}</div>`;
+    <div>${sourcesHTML([...m.src, ...(hasPop(l) ? ["pop"] : []), ...(FAC_SRC[l] || [])])}</div>`;
 }
 function renderUnit() {
   const { layer: l, i } = state.sel, u = U[l][i], m = LAYER[l];
@@ -733,7 +803,8 @@ function renderUnit() {
     </div><button class="x" id="x" aria-label="Close and show the layer description">×</button></div>
     ${u.x ? `<div class="note">${esc(u.x)}</div>` : ""}
     ${popHTML(l, u)}
-    <dl class="attrs num">${attrs}<dt>Area</dt><dd>${fmtArea(u.km2)}</dd></dl>`;
+    <dl class="attrs num">${attrs}<dt>Area</dt><dd>${fmtArea(u.km2)}</dd></dl>
+    ${facHTML(l, i)}`;
   html += renderOverlaps(l, i);
   html += `<button class="clear" id="clear">Clear selection</button>`;
   $("panel").innerHTML = html;
@@ -885,13 +956,14 @@ function runSearch() {
 
 // ---------- start
 async function start() {
-  const [aligned, city, units, ov, roads, water, metro, ...off] = await Promise.all(
-    ["aligned.topo.json", "city.topo.json", "units.json", "overlaps.json", "roads.topo.json", "water.topo.json", "metro.json", ...OFFICIAL.map(l => `${l}.topo.json`)]
+  const [aligned, city, units, ov, roads, water, metro, fac, ...off] = await Promise.all(
+    ["aligned.topo.json", "city.topo.json", "units.json", "overlaps.json", "roads.topo.json", "water.topo.json", "metro.json", "facilities.json", ...OFFICIAL.map(l => `${l}.topo.json`)]
       .map(f => fetch("data/" + f).then(r => { if (!r.ok) throw new Error(f + " " + r.status); return r.json(); })));
   U = units.units; LAYERS = units.layers; OV = ov; POP_MONTH = units.popMonth; CITY_POP = units.cityPop;
   BASEMAP.roads = topojson.feature(roads, roads.objects.roads);
   BASEMAP.water = topojson.feature(water, water.objects.water);
   METRO = metro;
+  FAC = fac;
   for (const l of ORDER) {
     const topo = OFFICIAL.includes(l) ? off[OFFICIAL.indexOf(l)] : aligned;
     const fc = topojson.feature(topo, topo.objects[l]);
