@@ -141,27 +141,37 @@ svg.map { display: block; width: 100%; height: 100%; background: var(--bg); touc
 svg.map { position: relative; }
 .tiles { position: absolute; left: 0; top: 0; width: 100%; overflow: hidden; pointer-events: none; z-index: 0; }  /* own stacking context: tiles stay under the map, buttons and legend */
 .tiles img { position: absolute; max-width: none; user-select: none; -webkit-user-drag: none; }
-.tiles.topo { filter: grayscale(1); opacity: .75; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tiles.topo { filter: grayscale(1) invert(1); opacity: .6; } }
-:root[data-theme="dark"] .tiles.topo { filter: grayscale(1) invert(1); opacity: .6; }
+.tiles.emap, .bm-thumb.emap { opacity: .5; }  /* the street map keeps its colours, faded so the boundaries stay on top */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(.tiles, .bm-thumb).emap { filter: invert(1) hue-rotate(180deg); opacity: .45; } }
+:root[data-theme="dark"] :is(.tiles, .bm-thumb).emap { filter: invert(1) hue-rotate(180deg); opacity: .45; }
+.base-emap { background: var(--land); }
 .has-tiles svg.map { background: transparent; }
 .has-tiles .land { fill: none; }
 /* the city's tiles carry neighbouring areas too (the aerial photo fills them with black): cover everything outside the city */
 .outside { display: none; }
 .has-tiles .outside { display: inline; fill: var(--bg); fill-rule: evenodd; pointer-events: none; }
 .has-tiles .water, .has-tiles .roads { display: none; }
-.base-topo .unit { stroke: var(--ink); stroke-width: 1.1; }
-.base-topo .unit.sparse { stroke-width: 1.6; }
+.base-emap .unit { stroke: var(--ink); stroke-width: 1.1; }
+.base-emap .unit.sparse { stroke-width: 1.6; }
 .base-aerial .unit { stroke: #fff; stroke-width: 1.2; }
 .base-aerial .unit.sparse { stroke-width: 1.8; }
 .base-aerial .city-edge { stroke: #fff; }
 .base-aerial .ctx { stroke: rgba(255, 255, 255, .6); }
-.legend .base { flex-wrap: wrap; gap: 4px; }
-.legend .base-k { color: var(--ink-3); margin-right: 2px; }
-.legend .base button { border: 1px solid var(--rule); background: var(--panel); border-radius: 4px; padding: 1px 7px; color: var(--ink-2); cursor: pointer; }
-.legend .base button:hover { background: var(--hover); }
-.legend .base button:focus-visible { outline: 2px solid var(--accent); }
-.legend .base button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+/* base map switch, as in Google Maps: a thumbnail button that opens a row of thumbnails, one per base map */
+.basemaps { position: absolute; left: 14px; bottom: 14px; z-index: 3; display: flex; align-items: flex-end; gap: 8px; }
+.bm-toggle { position: relative; width: 64px; height: 64px; padding: 0; border: 2px solid #fff; border-radius: 8px; overflow: hidden;
+  background: var(--land); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); cursor: pointer; }
+.bm-toggle:focus-visible, .bm-menu button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bm-thumb { display: block; width: 100%; height: 100%; object-fit: cover; }
+.bm-label { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; gap: 3px;
+  padding: 14px 0 4px; color: #fff; font-size: 11px; font-weight: 600; background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .6)); }
+.bm-menu { display: flex; gap: 8px; padding: 6px 8px; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, .15); }
+.bm-menu[hidden] { display: none; }
+.bm-menu button { display: grid; justify-items: center; gap: 3px; min-width: 56px; white-space: nowrap; padding: 0; border: 0; background: none; color: var(--ink-2); font-size: 11px; cursor: pointer; }
+.bm-menu .bm-thumb { width: 52px; height: 52px; border: 2px solid var(--rule); border-radius: 6px; background: var(--land); }
+.bm-menu button:hover .bm-thumb { border-color: var(--ink-3); }
+.bm-menu button[aria-pressed="true"] { color: var(--ink); font-weight: 600; }
+.bm-menu button[aria-pressed="true"] .bm-thumb { border-color: var(--ink); }
 .legend .attrib { color: var(--ink-3); font-size: 11px; display: block; }
 .legend .attrib a { color: inherit; }
 .land { fill: var(--land); }
@@ -199,8 +209,8 @@ svg.map { position: relative; }
 .tools button { width: 34px; height: 34px; border-radius: 6px; border: 1px solid var(--rule); background: var(--panel); cursor: pointer; font-size: 18px; line-height: 1; }
 .tools button:hover { background: var(--bg); }
 .tools button:focus-visible { outline: 2px solid var(--accent); }
-.legend { position: absolute; left: 14px; bottom: 14px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px;
-  display: grid; gap: 5px; font-size: 12px; color: var(--ink-2); max-width: calc(100% - 28px); }
+.legend { position: absolute; left: 88px; bottom: 14px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px;
+  display: grid; gap: 5px; font-size: 12px; color: var(--ink-2); max-width: calc(100% - 102px); }
 .legend .row { display: flex; gap: 8px; align-items: center; }
 .legend label.row { cursor: pointer; color: var(--ink); }
 .legend .metro-key { display: inline-flex; gap: 8px; align-items: center; }
@@ -225,6 +235,8 @@ svg.map { position: relative; }
   .mapbox { position: relative; }
   svg.map { height: 62vh; min-height: 340px; }
   .legend { position: static; max-width: none; border: 0; border-top: 1px solid var(--rule); border-radius: 0; padding: 10px 16px; }
+  .basemaps { bottom: calc(100% - max(62vh, 340px) + 12px); }  /* 12 px above the map's bottom edge (the legend is below the map), so the menu opens upwards */
+  .bm-toggle { width: 56px; height: 56px; }
   .panel { position: static; width: auto; max-height: none; border: 0; border-top: 1px solid var(--rule); border-radius: 0; box-shadow: none; }
   .side-scroll { overflow: visible; }
   .layers { display: none; }
@@ -278,7 +290,7 @@ img { max-width: 100%; }
           <li><a href="downloads/taipei_boundaries_geojson.zip" download>All layers as GeoJSON</a><span class="what">20 files, zipped, 4.2 MB</span></li>
           <li><a href="downloads/taipei_boundaries_gpkg.zip" download>All layers as a GeoPackage</a><span class="what">one file, zipped, 7.3 MB</span></li>
           <li><a href="downloads/taipei_boundaries_tables.zip" download>Village and lin crosswalks, overlaps, facility locations</a><span class="what">4 CSV files, zipped, 501 KB</span></li>
-          <li><a href="downloads/README_zh.md" download>Methods, sources and known issues</a><span class="what">in Chinese, 25 KB</span></li>
+          <li><a href="downloads/README_zh.md" download>Methods, sources and known issues</a><span class="what">in Chinese, 26 KB</span></li>
         </ul>
       </details>
       <details class="about" id="about">
@@ -288,7 +300,7 @@ img { max-width: 100%; }
         <p>English names are official where one exists. Labels like “Polling station 0917” are descriptions.</p>
         <p>Population is household registration by village, September 2026, shown only for layers made of whole villages.</p>
         <p>Squares mark district offices, police, health centers, schools and fire stations. They sit at the official street address, placed with the Civil Affairs Department’s house-number coordinates; fire stations use the Fire Department’s own coordinates.</p>
-        <p>Base maps: Simple draws roads wider than 8 m (Public Works Department), river zones (urban-plan zoning map) and MRT stations (Taipei Rapid Transit Corporation). The topographic map and aerial photo (2025) are loaded live from the Taipei City Urban Development Department.</p>
+        <p>Base maps: Simple draws roads wider than 8 m (Public Works Department), river zones (urban-plan zoning map) and MRT stations (Taipei Rapid Transit Corporation). The street map and aerial photo (2025) are loaded live from the Taipei City Urban Development Department.</p>
         <p>Methods, sources and known issues: <a href="downloads/README_zh.md">README</a> (in Chinese).</p>
         <p>Inspired by <a href="https://boundaries.beta.nyc/" target="_blank" rel="noopener">NYC Boundaries</a> by BetaNYC.</p>
       </details>
@@ -327,6 +339,7 @@ img { max-width: 100%; }
       <button id="zreset" aria-label="Show the whole city" style="font-size:13px">⤢</button>
     </div>
     <div class="legend" id="legend"></div>
+    <div class="basemaps" id="basemaps"></div>
     <div class="tip" id="tip" hidden></div>
     <div class="loading" id="loading">Loading boundaries…</div>
     </div>
@@ -596,12 +609,9 @@ function drawLegend() {
       <div class="ticks"><span>0</span>${BREAKS.map(b => `<span>${b / 1000}k</span>`).join("")}</div>
       <div class="ticks" style="display:block">residents per km², ${esc(POP_MONTH)}</div></div>`;
   }
-  html += `<div class="row base" role="group" aria-label="Base map"><span class="base-k">Base map</span>${Object.entries(BASEMAPS).map(([k, b]) =>
-    `<button type="button" data-base="${k}" aria-pressed="${state.base === k}">${b.short}</button>`).join("")}</div>`;
   if (bm.url) html += `<span class="attrib">${bm.credit}: <a href="${UDD_DOC}" target="_blank" rel="noopener">Taipei City Urban Development Dept.</a></span>`;
   $("legend").innerHTML = html;
   const cb = $("shade"); if (cb) cb.onchange = () => setShade(cb.checked);
-  $("legend").querySelectorAll("[data-base]").forEach(b => { b.onclick = () => setBase(b.dataset.base); });
 }
 function drawBase() {
   d3.select("#water").attr("d", path(BASEMAP.water));
@@ -614,6 +624,7 @@ function drawBase() {
 const METRO_DOTS = 8, METRO_NAMES = 4;
 const metresPerPx = () => 1 / (proj.scale() * transform.k);
 function metroLevel() {  // 0 nothing, 1 dots, 2 dots and names
+  if (state.base === "emap") return 0;  // the street map has its own stations
   const m = metresPerPx();
   return transform.k < 1.5 || m > METRO_DOTS ? 0 : m > METRO_NAMES ? 1 : 2;
 }
@@ -642,10 +653,10 @@ const WMTS = { x0: -5372600, y0: 10001100,
         236235.59151877242, 94494.23660750895, 47247.118303754476, 23623.559151877238, 9449.423660750896, 4724.711830375448,
         2362.355915187724, 944.9423660750896, 472.4711830375448, 236.2355915187724].map(d => d * 0.00028) };
 const BASEMAPS = {
-  simple: { short: "Simple" },
-  topo: { short: "Topographic", credit: "Topographic map (2025)", cls: "topo", bbox: [293391, 2759039, 319864, 2791263],  // the service's own extent
-    url: (z, r, c) => `${UDD}TOPO_97/DGN_2025_97/MapServer/WMTS/tile/1.0.0/TOPO_97_DGN_2025_97/default/default028mm/${z}/${r}/${c}.png` },
-  aerial: { short: "Aerial", credit: "Aerial photo (2025)", cls: "aerial", bbox: [295200, 2760900, 317600, 2789700],
+  simple: { name: "Simple" },
+  emap: { name: "Street map", credit: "Street map", cls: "emap", bbox: [296000, 2760900, 317600, 2789700],  // the service's own extent
+    url: (z, r, c) => `${UDD}Urban_97/EMap_97/MapServer/WMTS/tile/1.0.0/Urban_97_EMap_97/default/default028mm/${z}/${r}/${c}.png` },
+  aerial: { name: "Aerial", credit: "Aerial photo (2025)", cls: "aerial", bbox: [295200, 2760900, 317600, 2789700],
     url: (z, r, c) => `${UDD}Aerial_97/Ortho_2025_97/MapServer/WMTS/tile/1.0.0/Aerial_97_Ortho_2025_97/default/default028mm/${z}/${r}/${c}` },
 };
 const TILES = new Map();  // "z/row/col" -> { img, z, r, c, done }
@@ -718,10 +729,42 @@ function setBase(k) {
   $("tiles").className = "tiles" + (bm.cls ? " " + bm.cls : "");
   const mb = $("mapbox");
   mb.classList.toggle("has-tiles", !!bm.url);
-  mb.classList.toggle("base-topo", k === "topo");
+  mb.classList.toggle("base-emap", k === "emap");
   mb.classList.toggle("base-aerial", k === "aerial");
   updateTiles(true);
+  placeMetro();
   drawLegend();
+  drawBaseSwitch();
+}
+
+// ---------- base map switch, as in Google Maps: a "Layers" thumbnail that opens one thumbnail per base map.
+// Every thumbnail shows the same square, one level-10 tile on the Tamsui River west of Ximen. The street map and
+// aerial thumbnails are that tile, loaded from the city's server like the map itself; Simple is drawn from our data.
+const THUMB = { z: 10, r: 10674, c: 8376 };
+const LAYERS_ICON = `<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1.5 11 4.2 6 6.9 1 4.2Z" fill="currentColor"></path><path d="M1.6 6.6 6 9 10.4 6.6" fill="none" stroke="currentColor" stroke-width="1.3"></path></svg>`;
+let SIMPLE_THUMB = "";
+function drawSimpleThumb() {
+  const span = 256 * WMTS.res[THUMB.z], x0 = WMTS.x0 + THUMB.c * span, y1 = WMTS.y0 - THUMB.r * span, s = 64 / span;
+  const p = d3.geoPath(d3.geoIdentity().reflectY(true).scale(s).translate([-x0 * s, y1 * s]).clipExtent([[0, 0], [64, 64]]));
+  SIMPLE_THUMB = `<svg class="bm-thumb" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" style="fill:var(--land)"></rect>`
+    + `<path d="${p(BASEMAP.water) || ""}" style="fill:var(--water)"></path><path d="${p(BASEMAP.roads) || ""}" style="fill:var(--road)"></path></svg>`;
+}
+function thumb(k, lazy) {
+  const b = BASEMAPS[k];
+  return b.url ? `<img class="bm-thumb ${b.cls}" alt=""${lazy ? ' loading="lazy"' : ""} src="${b.url(THUMB.z, THUMB.r, THUMB.c)}">` : SIMPLE_THUMB;
+}
+function drawBaseSwitch() {
+  const preview = state.base === "aerial" ? "simple" : "aerial";  // like Google: the closed button shows another base map
+  $("basemaps").innerHTML = `<button type="button" class="bm-toggle" id="bm-toggle" aria-expanded="false" aria-controls="bm-menu"
+      aria-label="Base map: ${BASEMAPS[state.base].name}. Choose another">${thumb(preview, false)}<span class="bm-label">${LAYERS_ICON}Layers</span></button>
+    <div class="bm-menu" id="bm-menu" role="group" aria-label="Base map" hidden>${Object.entries(BASEMAPS).map(([k, b]) =>
+      `<button type="button" data-base="${k}" aria-pressed="${state.base === k}">${thumb(k, true)}<span>${b.name}</span></button>`).join("")}</div>`;
+  $("bm-toggle").onclick = () => openBaseMenu($("bm-menu").hidden);
+  $("bm-menu").querySelectorAll("[data-base]").forEach(b => { b.onclick = () => { openBaseMenu(false); setBase(b.dataset.base); $("bm-toggle").focus(); }; });
+}
+function openBaseMenu(open) {
+  $("bm-menu").hidden = !open;
+  $("bm-toggle").setAttribute("aria-expanded", open);
 }
 
 // ---------- facilities: the office, station or school behind a unit, at its official street address
@@ -1016,6 +1059,10 @@ async function start() {
   $("zout").onclick = () => svg.transition().duration(250).call(zoom.scaleBy, 1 / 1.6);
   $("zreset").onclick = () => svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
 
+  drawSimpleThumb();
+  drawBaseSwitch();
+  document.addEventListener("click", e => { if (!e.target.closest("#basemaps")) openBaseMenu(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("bm-menu").hidden) { openBaseMenu(false); $("bm-toggle").focus(); } });
   buildLayerList();
   buildIndex();
   buildKeys();
