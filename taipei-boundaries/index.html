@@ -153,7 +153,6 @@ svg.map { display: block; width: 100%; height: 100%; background: var(--bg); touc
 .unit.patch:hover { fill-opacity: .25; }
 .unit.null { fill: url(#hatch); stroke: var(--null); }
 .sel { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; vector-effect: non-scaling-stroke; pointer-events: none; }
-.prev { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; pointer-events: none; }
 .peek { fill: none; stroke: var(--ink); stroke-width: 2.5; vector-effect: non-scaling-stroke; pointer-events: none; }
 .pin { fill: var(--accent); stroke: var(--panel); stroke-width: 2; pointer-events: none; }
 .lbl { font-size: 12px; font-weight: 600; fill: var(--ink); paint-order: stroke; stroke: var(--land); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; text-anchor: middle; dominant-baseline: middle; }
@@ -274,7 +273,6 @@ img { max-width: 100%; }
         <g id="units"></g>
         <path class="ctx" id="ctx"></path>
         <path class="city-edge" id="edge"></path>
-        <path class="prev" id="prev"></path>
         <path class="sel" id="sel"></path>
         <path class="peek" id="peek"></path>
       </g>
@@ -377,7 +375,7 @@ const hasCJK = s => /[㐀-鿿]/.test(s || "");
 let KEYS = {};  // per layer: the token that names each unit in the address
 let U, OV, FEAT = {}, BOX = {}, LAYERS, proj, path, zoom, svg, gZoom, transform = d3.zoomIdentity;
 let BASEMAP = {}, METRO = [], POP_MONTH = "", CITY_POP = 0;
-const state = { layer: "district", sel: null, prev: null, point: null, shade: false };
+const state = { layer: "district", sel: null, point: null, shade: false };
 const BREAKS = [5000, 15000, 25000, 40000];  // residents per km², fixed so layers can be compared
 const NOPOP = {
   lin: "No population: these zones are built from lin, and lin population is not published.",
@@ -538,7 +536,6 @@ function drawLegend() {
   let html = `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:${LAYER[l].patch ? "var(--line)" : "none"};fill-opacity:.1;stroke:var(--line)"></rect></svg>${esc(LAYER[l].title)}</div>`;
   if (hasNull) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:url(#hatch);stroke:var(--null)"></rect></svg>Not determined from official data</div>`;
   if (state.sel) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:var(--accent-soft);stroke:var(--accent);stroke-width:2"></rect></svg>Selected</div>`;
-  if (state.prev) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3"></rect></svg>Earlier selection</div>`;
   html += `<div class="row" style="color:var(--ink-3)"><svg width="22" height="12"><rect x="1" y="2" width="9" height="8" style="fill:var(--water)"></rect><rect x="12" y="2" width="9" height="8" style="fill:var(--road);stroke:var(--rule)"></rect></svg>River zones, roads &gt; 8 m <svg width="12" height="12"><circle cx="6" cy="6" r="3" class="metro"></circle></svg>MRT</div>`;
   if (hasPop(l)) {
     html += `<label class="row" for="shade"><input type="checkbox" id="shade"${state.shade ? " checked" : ""}> Shade by population density</label>`;
@@ -560,9 +557,8 @@ function placeMetro() {
   g.selectAll("text").data(k >= 2.5 ? pts : []).join("text").attr("class", "metro-lbl").attr("x", d => d.x + 6).attr("y", d => d.y + 3.5).text(d => d.n);
 }
 function drawSelection() {
-  const s = state.sel, p = state.prev;
+  const s = state.sel;
   d3.select("#sel").attr("d", s ? path(FEAT[s.layer][s.i]) : null);
-  d3.select("#prev").attr("d", p ? path(FEAT[p.layer][p.i]) : null);
   placeLabels();
   drawLegend();
   writeHash();
@@ -592,7 +588,6 @@ function renderLayerInfo() {
     <p class="num">${countText(l)}</p>
     <p>${esc(m.about)}</p>
     <p class="hint">${hasPop(l) ? `Population: ${esc(POP_MONTH)}, summed from villages. Shade by density in the legend.` : esc(NOPOP[NOPOP_LAYER[l]] || "")}</p>
-    ${state.prev ? `<p class="hint">Dashed outline: your earlier selection, ${nameHTML(U[state.prev.layer][state.prev.i])} (${esc(LAYER[state.prev.layer].title)}).</p>` : ""}
     <p class="hint">Click an area on the map, or search for a name above.</p>
     ${DOWNLOADS && DOWNLOADS[l] ? `<p class="hint"><a href="${esc(DOWNLOADS[l][0])}" download>Download this layer</a> (GeoJSON, zipped, ${esc(DOWNLOADS[l][1])})</p>` : ""}
     <div>${sourcesHTML(hasPop(l) ? [...m.src, "pop"] : m.src)}</div>`;
@@ -614,7 +609,7 @@ function renderUnit() {
   html += renderOverlaps(l, i);
   html += `<button class="clear" id="clear">Clear selection</button>`;
   $("panel").innerHTML = html;
-  const clear = () => { state.prev = state.sel = null; state.point = null; drawSelection(); renderLayerInfo(); };
+  const clear = () => { state.sel = null; state.point = null; drawSelection(); renderLayerInfo(); };
   $("clear").onclick = clear;
   $("x").onclick = clear;
   $("panel").querySelectorAll(".ov-item").forEach(b => {
@@ -667,7 +662,7 @@ function peek(L, j) { d3.select("#peek").attr("d", L ? path(FEAT[L][j]) : null);
 // ---------- actions
 function setLayer(l, keepSel) {
   if (!LAYER[l]) return;
-  if (state.sel && state.sel.layer !== l) { state.prev = state.sel; state.sel = null; }
+  if (state.sel && state.sel.layer !== l) { state.sel = null; state.point = null; }  // a new layer starts with nothing selected
   state.layer = l;
   document.querySelectorAll(".layer-btn").forEach(b => b.setAttribute("aria-pressed", b.dataset.layer === l));
   $("layer-sel").value = l;
@@ -681,18 +676,15 @@ function setShade(on) {
   drawSelection();
 }
 function select(l, i, zoomTo) {
-  if (state.sel && state.sel.layer !== l) state.prev = state.sel;
-  if (state.prev && state.prev.layer === l) state.prev = null;
   state.sel = { layer: l, i };
   drawSelection();
   renderUnit();
   if (zoomTo) zoomToFeature(FEAT[l][i]);
 }
 function goTo(l, i) {
-  const keepPrev = state.sel;
-  if (l !== state.layer) { state.layer = l; setLayer(l, false); }
-  state.prev = keepPrev && keepPrev.layer !== l ? keepPrev : null;
-  state.sel = null;
+  const pt = state.point;  // keep the clicked spot, so its units stay marked in the overlap list
+  if (l !== state.layer) setLayer(l, false);
+  state.point = pt;
   select(l, i, true);
 }
 function zoomToFeature(f) {
@@ -735,7 +727,7 @@ function applyHash() {
   const l = m && LAYER[m[1]] ? m[1] : "district";
   let i = -1;
   if (m && LAYER[m[1]] && m[2]) { try { i = KEYS[l].indexOf(decodeURIComponent(m[2])); } catch (e) {} }
-  state.sel = state.prev = state.point = null;
+  state.sel = state.point = null;
   setLayer(l, false);
   if (i < 0) return;
   const pt = m[3] ? [+m[3], +m[4]] : null;
