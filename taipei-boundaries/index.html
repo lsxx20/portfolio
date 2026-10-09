@@ -617,7 +617,7 @@ const BASEMAPS = {
     url: (z, r, c) => `${UDD}Aerial_97/Ortho_2025_97/MapServer/WMTS/tile/1.0.0/Aerial_97_Ortho_2025_97/default/default028mm/${z}/${r}/${c}` },
 };
 const TILES = new Map();  // "z/row/col" -> { img, z, r, c, done }
-let tileTimer, tileZ = -1;
+let tileTimer, tileZ = -1, tileKeys = new Set();  // tileKeys: the tiles the current view needs
 
 function tileView() {
   const bm = BASEMAPS[state.base], r = $("map").getBoundingClientRect();
@@ -650,27 +650,28 @@ function updateTiles(load) {
   if (load) {
     const { z, need } = tileView();
     tileZ = z;
-    const keys = new Set(need.map(n => n.join("/")));
+    tileKeys = new Set(need.map(n => n.join("/")));
     for (const [z1, r, c] of need) {
       const key = `${z1}/${r}/${c}`;
       if (TILES.has(key)) continue;
       const img = new Image(), t = { img, z: z1, r, c, done: false };
       img.alt = "";
       img.decoding = "async";
-      img.onload = () => { t.done = true; sweep(keys); };
-      img.onerror = () => { t.done = true; img.remove(); sweep(keys); };
+      img.onload = () => { t.done = true; sweep(); };
+      img.onerror = () => { t.done = true; img.remove(); sweep(); };
       img.src = bm.url(z1, r, c);
       TILES.set(key, t);
       box.appendChild(img);
     }
-    sweep(keys);
+    sweep();
   }
   TILES.forEach(t => { t.img.style.zIndex = t.z === tileZ ? 2 : 1; placeTile(t); });
 }
-// once every tile of the current view has arrived, drop the ones from other zoom levels or out of view
-function sweep(keys) {
-  for (const k of keys) { const t = TILES.get(k); if (t && !t.done) return; }
-  for (const [k, t] of TILES) if (!keys.has(k)) { t.img.remove(); TILES.delete(k); }
+// once every tile of the CURRENT view has arrived, drop the ones from other zoom levels or out of view.
+// It always checks the current view: a slow tile from an earlier view must not clear the newer tiles.
+function sweep() {
+  for (const k of tileKeys) { const t = TILES.get(k); if (!t || !t.done) return; }
+  for (const [k, t] of TILES) if (!tileKeys.has(k)) { t.img.remove(); TILES.delete(k); }
 }
 function scheduleTiles() {
   updateTiles(false);  // move and scale what is already there on every frame
