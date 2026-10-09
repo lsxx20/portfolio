@@ -207,6 +207,11 @@
 - 臺北市次分區界圖：https://data.taipei/dataset/detail?id=d8978c42-1343-4a86-82bc-27d949606e47
 - 二級發布區圖：https://data.gov.tw/dataset/20598
 - 臺北市都市計畫使用分區圖：https://data.taipei/dataset/detail?id=3bab0a01-7936-4218-8cb5-f74dfcb43dda
+- 中華郵政村里文字巷中英對照（行政區、里的英文名稱）：https://www.post.gov.tw/post/internet/Postal/index.jsp?ID=207
+- 內政部戶政司村里戶數、人口（115 年 9 月）：https://data.gov.tw/dataset/77132
+- 臺北市各行政區人口數及戶數（民政局，用來核對）：https://data.taipei/dataset/detail?id=6a1dbb4e-e99c-4e67-ab09-f6d83852dc99
+- 臺北市寬度超過 8 公尺道路（工務局，底圖）：https://data.taipei/dataset/detail?id=ee2e4015-8844-48fb-aa57-31209909b0fc
+- 臺北捷運車站出入口座標（臺北捷運公司，底圖）：https://data.taipei/dataset/detail?id=cfa4778c-62c1-497b-b704-756231de348b
 
 每個原始檔的下載網址與 SHA-256 記在 `official/sources_manifest.json`。各層的劃分規則記在 `official/bases.json`。
 

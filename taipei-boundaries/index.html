@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="An interactive map of the boundary systems that divide Taipei: electoral districts, polling-station areas, school zones, police and court jurisdictions, statistical areas and more, built from official data.">
+<meta name="description" content="Electoral, school, police, court and statistical boundaries in Taipei, from official data.">
 <meta property="og:title" content="Taipei Boundaries">
-<meta property="og:description" content="An interactive map of the boundary systems that divide Taipei: electoral districts, polling-station areas, school zones, police and court jurisdictions, statistical areas and more, built from official data.">
+<meta property="og:description" content="Electoral, school, police, court and statistical boundaries in Taipei, from official data.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://sixianli.com/taipei-boundaries/">
 <meta property="og:image" content="https://sixianli.com/taipei-boundaries/og.png">
@@ -219,7 +219,7 @@ img { max-width: 100%; }
   <aside class="side">
     <header class="top">
       <h1>Taipei Boundaries</h1>
-      <p>Explore the boundary systems that divide Taipei: electoral districts, school zones, police and court jurisdictions, statistical areas and more. Pick a layer, then click any area to see what overlaps it.</p>
+      <p>Electoral, school, police, court and statistical boundaries in Taipei, from official data. Pick a layer and click an area to see what overlaps it.</p>
     </header>
     <div class="search">
       <label for="q" class="section-label" style="display:block;margin-bottom:6px">Find a place or unit</label>
@@ -234,23 +234,23 @@ img { max-width: 100%; }
       <nav class="layers" id="layers" aria-label="Layers"></nav>
       <details class="about downloads" id="downloads">
         <summary>Download the data</summary>
-        <p>Full-resolution layers and tables. Coordinates: TWD97 / TM2 (EPSG:3826) in the GeoPackage, WGS84 in the GeoJSON files.</p>
+        <p>Full-resolution data. GeoPackage in TWD97 (EPSG:3826), GeoJSON in WGS84.</p>
         <ul>
           <li><a href="downloads/taipei_boundaries_geojson.zip" download>All layers as GeoJSON</a><span class="what">20 files, zipped, 4.2 MB</span></li>
           <li><a href="downloads/taipei_boundaries_gpkg.zip" download>All layers as a GeoPackage</a><span class="what">one file, zipped, 7.3 MB</span></li>
           <li><a href="downloads/taipei_boundaries_tables.zip" download>Village and lin crosswalks, overlap table</a><span class="what">3 CSV files, zipped, 484 KB</span></li>
-          <li><a href="downloads/README_zh.md" download>Methods, sources and known issues</a><span class="what">in Chinese, 20 KB</span></li>
+          <li><a href="downloads/README_zh.md" download>Methods, sources and known issues</a><span class="what">in Chinese, 21 KB</span></li>
         </ul>
       </details>
       <details class="about" id="about">
         <summary>About this map</summary>
-        <p>Every layer comes from published official data. Layers built from villages (里) or neighbourhoods (鄰, <i>lin</i>) share exactly the same edges, so they can be compared directly. Where the official data cannot decide which unit a piece of land belongs to, the map leaves it blank and shows it hatched, with the reason.</p>
-        <p>Shapes are simplified for the web (2 m tolerance; the median unit changes area by less than 0.02%, and the small zoning polygons by about 0.1%). Needle-thin slivers under 2 mm wide, left over where the source maps were merged, are removed; they changed no unit’s area by more than 0.1 m². Overlap percentages are computed from the full-resolution data, not from the shapes you see. An overlap is listed when it is at least 1% of the smaller of the two units, which hides hairline edge differences between datasets drawn by different agencies.</p>
-        <p>English names are used only where an official one exists: districts and villages (Chunghwa Post romanization), police precincts (Taipei City Police Department) and courts (court websites). Other proper names stay in Chinese. Twelve villages do not appear under their current spelling in the Chunghwa Post romanization list (a file dated 2013; 舊莊里, for example, is listed as 舊庄里), so their names also stay in Chinese. Numbered units and service areas get plain English labels written for this map, such as “Council constituency 1”, “Polling station 0917” or “Neihu District health center”; these are descriptions, not official English names.</p>
-        <p>The “What’s here” marker shows which unit of each layer contains the spot you clicked, tested against the simplified shapes; within a few metres of a boundary it may differ from the full-resolution data.</p>
-        <p>Population comes from the Ministry of the Interior’s household-registration figures for each village (September 2026), which add up exactly to the Civil Affairs Department’s district totals (2,418,872 residents). It is shown only for layers made of whole villages, where the sum is exact. Polling-station and school zones are drawn from neighbourhoods (lin), and lin-level population is not published as open data; subdistricts, statistical areas and zoning do not follow village lines. Those layers show no population rather than an estimate. Density is residents per km² of total area, including hills, river channels and riverbanks.</p>
-        <p>The base map draws every segment of the Public Works Department’s dataset of roads wider than 8 metres (263 of its 7,667 segments are recorded as narrower than 8 m), river zones from the urban-plan zoning map, and MRT stations placed at the centre of their exits (Taipei Rapid Transit Corporation). Station names are in Chinese; the open data has no English names.</p>
-        <p>Compiled 8 October 2026 from the sources listed under each layer. The idea comes from <a href="https://boundaries.beta.nyc/" target="_blank" rel="noopener">NYC Boundaries</a> by BetaNYC.</p>
+        <p>All layers come from official data. Layers built from villages (里) or lin (鄰) share the same edges. Hatched areas are land the official data does not assign to any unit.</p>
+        <p>Shapes are simplified for the web. Overlap percentages use the full-resolution data.</p>
+        <p>English names are official where one exists. Labels like “Polling station 0917” are descriptions.</p>
+        <p>Population is household registration by village, September 2026, shown only for layers made of whole villages.</p>
+        <p>Base map: roads wider than 8 m (Public Works Department), river zones (urban-plan zoning map), MRT stations (Taipei Rapid Transit Corporation).</p>
+        <p>Methods, sources and known issues: <a href="downloads/README_zh.md">README</a> (in Chinese).</p>
+        <p>Inspired by <a href="https://boundaries.beta.nyc/" target="_blank" rel="noopener">NYC Boundaries</a> by BetaNYC.</p>
       </details>
       <p class="credit">Compiled by <a href="https://sixianli.com">Si-Xian Li</a>, October 2026.</p>
     </div>
@@ -321,43 +321,43 @@ const SRC = {
 };
 const LAYER = {
   district: { noun: "districts", title: "Districts", group: "Administrative", label: u => u.n.replace(" District", ""),
-    about: "Taipei’s 12 districts. They are built by merging the 456 villages of the official village map, so every layer built from villages or lin shares exactly the same edges. Subdistricts, statistical areas and zoning are official shapes drawn separately and do not line up exactly.", src: ["village", "postEn"] },
+    about: "Merged from the 456 villages.", src: ["village", "postEn"] },
   village: { noun: "villages", title: "Villages", group: "Administrative",
-    about: "The 456 villages (里, li), the smallest administrative unit with an elected chief, as published by the Civil Affairs Department.", src: ["village", "postEn"] },
+    about: "Each village (里) has an elected chief.", src: ["village", "postEn"] },
   council_2026: { noun: "constituencies", title: "City Council constituencies", group: "Elections", label: u => u.n.replace("Council constituency ", ""),
-    about: "Six geographic constituencies for the 28 November 2026 Taipei City Council election, each made of two whole districts. Constituencies 7 and 8 elect lowland and highland Indigenous councillors from the whole city and are not drawn.", src: ["council", "cecdb"] },
+    about: "For the 28 November 2026 election, two districts each. The two Indigenous constituencies cover the whole city and are not drawn.", src: ["council", "cecdb"] },
   legislator: { noun: "constituencies", title: "Legislative constituencies", group: "Elections", label: u => u.n.replace("Legislative constituency ", ""),
-    about: "Eight constituencies for the Legislative Yuan, assigned village by village from the 2024 election results database and checked against the 2015 gazette for the three districts that are split. No change for 2028 has been announced.", src: ["cecdb", "gazette", "village"] },
+    about: "Assigned by village from the 2024 election database.", src: ["cecdb", "gazette", "village"] },
   polling_2026: { noun: "polling stations", title: "Polling-station areas", group: "Elections",
-    about: "The area served by each of the 1,790 polling stations for the 28 November 2026 local elections, built from the lin (鄰, neighbourhoods) the official notice lists for each station. Every station serves part or all of one village. Hatched areas are places the official data cannot assign: one lin missing from the notice, one lin polygon that the notice splits between two stations, slivers where the lin map and the village map disagree, and hairline gaps in the village map that lie between two stations.", src: ["polls", "pollsfix", "lin", "village"] },
+    about: "For 28 November 2026, built from the lin each station serves.", src: ["polls", "pollsfix", "lin", "village"] },
   school_elementary: { noun: "zones", title: "Elementary school zones", group: "Schools",
-    about: "School zones for the 2026–27 school year, built from the Department of Education’s table of villages and lin. Where several schools are listed for the same lin the zone is shared and families choose among them. In Chaoyang Village (Datong) two schools each list some lin as their own sole zone; those are marked as conflicting. One lin in Futai Village (Xinyi) is not in the table.", src: ["school", "lin", "village"] },
+    about: "For 2026–27, from the Department of Education’s village and lin table.", src: ["school", "lin", "village"] },
   school_junior_high: { noun: "zones", title: "Junior high school zones", group: "Schools",
-    about: "Junior high school zones for the 2026–27 school year, built the same way as the elementary zones. Nine rows of the table cover parts of New Taipei City (Xizhi, Tamsui) served by four Taipei schools; those areas are outside this map.", src: ["school", "lin", "village"] },
+    about: "Same method. Areas in New Taipei served by Taipei schools are not shown.", src: ["school", "lin", "village"] },
   police_precinct: { noun: "precincts", title: "Police precincts", group: "Public safety", label: u => u.n.replace(" Precinct", ""),
-    about: "Fourteen precincts, built from the villages that each precinct’s police stations list on their websites. Daan Precinct lists no villages, but every village outside Da’an District is claimed by another precinct, so Daan Precinct covers Da’an District.", src: ["police", "village"] },
+    about: "From the villages listed on precinct websites. Daan Precinct lists none and is drawn as Da’an District.", src: ["police", "village"] },
   police_station: { noun: "police stations", title: "Police station areas", group: "Public safety",
-    about: "Areas of 83 police stations, from the village lists on the precinct websites. Three villages in Zhongshan District are listed by two stations and shown as shared. Daan Precinct’s seven stations publish no village lists, so Da’an District is left blank. Four village names misspelled on the websites were matched to the official names (富永→富水, 楊雅→揚雅, 糖部→糖蔀, 集劍潭→劍潭).", src: ["police", "village"] },
+    about: "From the same lists. Daan Precinct publishes none, so Da’an District is blank.", src: ["police", "village"] },
   fire_brigade: { noun: "battalions", title: "Fire & EMS battalions", group: "Public safety", label: u => u.n.replace("Fire & EMS battalion ", ""),
-    about: "The fire department’s four disaster-rescue and EMS battalions, each covering three whole districts. Company and squad areas are not published.", src: ["fire"] },
+    about: "Three districts each.", src: ["fire"] },
   court_district: { noun: "courts", title: "District courts", group: "Courts", label: u => u.n.replace("Taiwan ", "").replace(" District Court", ""),
-    about: "Taipei is split between two district courts. Each court’s area is the union of the areas its summary courts serve in the Judicial Yuan’s court directory.", src: ["court"] },
+    about: "Each covers the areas of its summary courts.", src: ["court"] },
   court_summary: { noun: "summary courts", title: "Summary courts", group: "Courts", label: u => u.n.replace(" Summary Division", "").replace(" Summary Court", ""),
-    about: "Summary courts handle small claims and minor criminal cases. Wenshan District is served by the Xindian Summary Division, located in New Taipei City. We found no official English name for the Neihu summary court (內湖簡易庭).", src: ["court"] },
+    about: "Wenshan is served by the Xindian Summary Division in New Taipei.", src: ["court"] },
   sanitation: { noun: "teams", title: "Sanitation teams", group: "City services", label: u => u.n.replace(" District sanitation team", ""),
-    about: "The Department of Environmental Protection runs one sanitation team for each district. Squad-level areas are published for only some districts and are not mapped.", src: ["sanitation"] },
+    about: "One per district.", src: ["sanitation"] },
   health_center: { noun: "health centers", title: "Health centers", group: "City services", label: u => u.n.replace(" District health center", ""),
-    about: "Each district health center handles public-health services for its own district.", src: ["health"] },
+    about: "One per district.", src: ["health"] },
   postal3: { noun: "codes", title: "Postal codes (3-digit)", group: "City services", label: u => u.n.replace("Postal code ", ""),
-    about: "Chunghwa Post’s 3-digit codes: one per district in Taipei. Full 3+3 codes are published as address ranges, not areas, so they are not mapped.", src: ["post"] },
+    about: "One per district.", src: ["post"] },
   subdistrict: { noun: "subdistricts", title: "Subdistricts", group: "Statistics & planning",
-    about: "68 subdistricts published by the Civil Affairs Department and shown as published. They mostly follow village lines but not exactly: nine villages lie less than 99% inside a single subdistrict.", src: ["sub"] },
+    about: "As published. They mostly follow village lines.", src: ["sub"] },
   segis_l2: { noun: "areas", title: "Statistical areas (level 2)", group: "Statistics & planning",
-    about: "907 level-2 statistical areas from the Ministry of the Interior, shown as published. They use 2015 boundaries, so their outline differs from the 2026 village map by about 1.6 km², mostly along the rivers.", src: ["segis"] },
+    about: "As published, on 2015 boundaries.", src: ["segis"] },
   zoning_heritage: { noun: "polygons", title: "Heritage zones", group: "Statistics & planning", patch: true,
-    about: "Urban-plan zones whose names mark preservation: preservation zones, historic-monument zones, settlement-preservation zones and the historic settlement special zone. These are zoning parcels, not named historic districts. Zoom in to see them.", src: ["zoning"] },
+    about: "Preservation zones from the urban-plan zoning map. Zoom in to see them.", src: ["zoning"] },
   zoning_industrial: { noun: "polygons", title: "Industrial zones", group: "Statistics & planning", patch: true,
-    about: "Urban-plan industrial zones (zone codes starting with I): Industrial Zones 2 and 3, technology industrial zones A–D, and strategic, auto-repair, software and industrial-service zones. Special-purpose ‘industry’ zones with D codes are not included.", src: ["zoning"] },
+    about: "Zones with codes starting with I, from the urban-plan zoning map.", src: ["zoning"] },
 };
 const ORDER = ["district", "village", "council_2026", "legislator", "polling_2026", "school_elementary", "school_junior_high",
   "police_precinct", "police_station", "fire_brigade", "court_district", "court_summary", "sanitation", "health_center",
@@ -375,8 +375,8 @@ let BASEMAP = {}, METRO = [], POP_MONTH = "", CITY_POP = 0;
 const state = { layer: "district", sel: null, prev: null, point: null, shade: false };
 const BREAKS = [5000, 15000, 25000, 40000];  // residents per km², fixed so layers can be compared
 const NOPOP = {
-  lin: "Population is not shown for this layer: its zones are drawn from lin (neighbourhoods), and lin-level population is not published as open data.",
-  shape: "Population is not shown for this layer: its shapes do not follow village lines, so village population cannot be summed exactly.",
+  lin: "No population: these zones are built from lin, and lin population is not published.",
+  shape: "No population: these shapes do not follow village lines.",
 };
 const NOPOP_LAYER = { polling_2026: "lin", school_elementary: "lin", school_junior_high: "lin", subdistrict: "shape", segis_l2: "shape", zoning_heritage: "shape", zoning_industrial: "shape" };
 const hasPop = l => U[l].some(u => u.pop != null);
@@ -401,7 +401,7 @@ function countUnits(l) {
 }
 function countText(l) {
   const n = countUnits(l), m = LAYER[l];
-  if (l === "police_station") return `${fmtInt(n)} police stations, plus 3 villages shared by two stations`;
+  if (l === "police_station") return `${fmtInt(n)} police stations + 3 shared villages`;
   if (l === "school_elementary") return `${fmtInt(n)} zones for 140 schools`;
   if (l === "school_junior_high") return `${fmtInt(n)} zones for 72 schools`;
   return `${fmtInt(n)} ${m.noun}`;
@@ -569,10 +569,10 @@ function renderLayerInfo() {
   const l = state.layer, m = LAYER[l];
   $("panel").innerHTML = `
     <div><div class="kicker">${esc(m.group)}</div><h3>${esc(m.title)}</h3></div>
-    <p class="num">${countText(l)}${OFFICIAL.includes(l) ? " · official shapes, shown as published" : ""}</p>
+    <p class="num">${countText(l)}</p>
     <p>${esc(m.about)}</p>
-    <p class="hint">${hasPop(l) ? `Population (${esc(POP_MONTH)}) is shown for every unit; it is the exact sum of its villages. Use the legend to shade the map by density.` : esc(NOPOP[NOPOP_LAYER[l]] || "")}</p>
-    ${state.prev ? `<p class="hint">Your earlier selection, ${nameHTML(U[state.prev.layer][state.prev.i])} (${esc(LAYER[state.prev.layer].title)}), stays outlined with a dashed line.</p>` : ""}
+    <p class="hint">${hasPop(l) ? `Population: ${esc(POP_MONTH)}, summed from villages. Shade by density in the legend.` : esc(NOPOP[NOPOP_LAYER[l]] || "")}</p>
+    ${state.prev ? `<p class="hint">Dashed outline: your earlier selection, ${nameHTML(U[state.prev.layer][state.prev.i])} (${esc(LAYER[state.prev.layer].title)}).</p>` : ""}
     <p class="hint">Click an area on the map, or search for a name above.</p>
     <div>${sourcesHTML(hasPop(l) ? [...m.src, "pop"] : m.src)}</div>`;
 }
@@ -630,7 +630,7 @@ function renderOverlaps(l, i) {
     const LIM = 6;
     const html = items.map((r, k) => {
       const u = U[L][r.j];
-      const pct = r.sSelf == null ? "" : `<span class="pct" title="${esc(fmtPct(r.sSelf))} of the selected area lies in this unit; it is ${esc(fmtPct(r.sOther))} of this unit">${fmtPct(r.sSelf)}</span>`;
+      const pct = r.sSelf == null ? "" : `<span class="pct" title="${esc(fmtPct(r.sSelf))} of the selection; ${esc(fmtPct(r.sOther))} of this unit">${fmtPct(r.sSelf)}</span>`;
       return `<button class="ov-item" data-l="${L}" data-i="${r.j}"${k >= LIM ? " hidden" : ""}><span>${nameHTML(u)}${r.j === here[L] ? '<span class="here">● here</span>' : ""}</span>${pct}</button>`;
     }).join("");
     const more = items.length > LIM ? `<button class="ov-more">Show all ${items.length}</button>` : "";
@@ -638,7 +638,7 @@ function renderOverlaps(l, i) {
   }).join("");
   if (!blocks) return isNull(l, i) ? "" : `<p class="hint">No overlaps with other layers.</p>`;
   return `<div><div class="section-label" style="margin-bottom:6px">Overlaps with other layers</div>
-    <p class="hint" style="margin-bottom:10px">Percent of the selected area that falls in each unit.${state.point ? " ● marks the unit at the spot you clicked." : ""}</p>
+    <p class="hint" style="margin-bottom:10px">Share of the selected area in each unit.${state.point ? " ● = where you clicked." : ""}</p>
     <div class="ov">${blocks}</div></div>`;
 }
 function peek(L, j) { d3.select("#peek").attr("d", L ? path(FEAT[L][j]) : null); }
