@@ -35,7 +35,7 @@
   --null: #9aa1a9;        /* hatching for areas the data cannot assign */
   --water: #dfe8ee;       /* river zones */
   --road: #eceef0;        /* roads wider than 8 m */
-  --metro: #4b5563;
+  --metro: #b3b9c0;       /* MRT station dots */
   --d1: #cde2fb; --d2: #86b6ef; --d3: #3987e5; --d4: #1c5cab; --d5: #0d366b;  /* density, low -> high */
   --font: "Public Sans", "Noto Sans TC", "Helvetica Neue", Arial, sans-serif;
   --zh: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
@@ -46,7 +46,7 @@
     --bg: #0f1113; --panel: #16191c; --land: #1c2024; --ink: #eef0f2; --ink-2: #b3b9c0; --ink-3: #7e858d;
     --rule: #2a2f35; --line: #d9dde2; --line-faint: #3a4047; --accent: #6ea2ff; --accent-soft: rgba(110, 162, 255, 0.22);
     --hover: rgba(238, 240, 242, 0.08); --null: #6c737b; color-scheme: dark;
-    --water: #1d2a33; --road: #262b31; --metro: #aab2bb;
+    --water: #1d2a33; --road: #262b31; --metro: #555c64;
     --d1: #104281; --d2: #1c5cab; --d3: #2a78d6; --d4: #6da7ec; --d5: #b7d3f6;
   }
 }
@@ -54,7 +54,7 @@
   --bg: #0f1113; --panel: #16191c; --land: #1c2024; --ink: #eef0f2; --ink-2: #b3b9c0; --ink-3: #7e858d;
   --rule: #2a2f35; --line: #d9dde2; --line-faint: #3a4047; --accent: #6ea2ff; --accent-soft: rgba(110, 162, 255, 0.22);
   --hover: rgba(238, 240, 242, 0.08); --null: #6c737b; color-scheme: dark;
-  --water: #1d2a33; --road: #262b31; --metro: #aab2bb;
+  --water: #1d2a33; --road: #262b31; --metro: #555c64;
   --d1: #104281; --d2: #1c5cab; --d3: #2a78d6; --d4: #6da7ec; --d5: #b7d3f6;
 }
 html, body { height: 100%; }
@@ -169,7 +169,7 @@ svg.map { position: relative; }
 .ctx { fill: none; stroke: var(--line-faint); stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
 .water { fill: var(--water); pointer-events: none; }
 .roads { fill: var(--road); pointer-events: none; }
-.metro { fill: var(--ink-3); pointer-events: none; }
+.metro { fill: var(--metro); pointer-events: none; }
 .has-tiles .metro { stroke: var(--panel); stroke-width: 1; }
 .metro-lbl { font-size: 10.5px; fill: var(--ink-2); paint-order: stroke; stroke: var(--land); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; font-family: var(--zh); }
 .fac { fill: var(--ink); stroke: var(--panel); stroke-width: 1.5; cursor: pointer; }
@@ -585,7 +585,7 @@ function drawLegend() {
   if (hasNull) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:url(#hatch);stroke:var(--null)"></rect></svg>Not determined from official data</div>`;
   if (state.sel) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:var(--accent-soft);stroke:var(--accent);stroke-width:2"></rect></svg>Selected</div>`;
   const bm = BASEMAPS[state.base];
-  const mrt = `<svg width="12" height="12"><circle cx="6" cy="6" r="3" class="metro"></circle></svg>MRT`, hide = metroLevel() ? "" : " hidden";
+  const mrt = `<svg width="12" height="12"><circle cx="6" cy="6" r="2.5" class="metro"></circle></svg>MRT`, hide = metroLevel() ? "" : " hidden";
   html += bm.url
     ? `<div class="row metro-key" style="color:var(--ink-3)"${hide}>${mrt}</div>`
     : `<div class="row" style="color:var(--ink-3)"><svg width="22" height="12"><rect x="1" y="2" width="9" height="8" style="fill:var(--water)"></rect><rect x="12" y="2" width="9" height="8" style="fill:var(--road);stroke:var(--rule)"></rect></svg>River zones, roads &gt; 8 m <span class="metro-key"${hide}>${mrt}</span></div>`;
@@ -608,9 +608,10 @@ function drawBase() {
   d3.select("#roads").attr("d", path(BASEMAP.roads));
 }
 // MRT stations appear only when zoomed in, like the stations on the NYC Boundaries base map. The thresholds are in
-// metres per screen pixel, so they mean the same on a phone and a desktop: 20 is about where a selected district fills
-// a desktop map, 6 covers a selected village. Never at the whole-city view (k < 1.5), even on a very large screen.
-const METRO_DOTS = 20, METRO_NAMES = 6;
+// metres per screen pixel, so they mean the same on a phone and a desktop: 8 is reached by selecting a village, a school
+// zone or a police station area (not a district), 4 by selecting a village of ordinary size. Never at the whole-city
+// view (k < 1.5), even on a very large screen.
+const METRO_DOTS = 8, METRO_NAMES = 4;
 const metresPerPx = () => 1 / (proj.scale() * transform.k);
 function metroLevel() {  // 0 nothing, 1 dots, 2 dots and names
   const m = metresPerPx();
@@ -619,7 +620,7 @@ function metroLevel() {  // 0 nothing, 1 dots, 2 dots and names
 function placeMetro() {
   const g = d3.select("#metro"), level = metroLevel();
   const pts = level ? METRO.map(([x, y, n]) => { const p = proj([x, y]); return { x: transform.applyX(p[0]), y: transform.applyY(p[1]), n }; }) : [];
-  g.selectAll("circle").data(pts).join("circle").attr("class", "metro").attr("r", 3).attr("cx", d => d.x).attr("cy", d => d.y);
+  g.selectAll("circle").data(pts).join("circle").attr("class", "metro").attr("r", 2.5).attr("cx", d => d.x).attr("cy", d => d.y);
   g.selectAll("text").data(level === 2 ? pts : []).join("text").attr("class", "metro-lbl").attr("x", d => d.x + 6).attr("y", d => d.y + 3.5).text(d => d.n);
   d3.selectAll("#legend .metro-key").attr("hidden", level ? null : "");
 }
