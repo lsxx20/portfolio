@@ -1,29 +1,23 @@
-# 臺北市邊界圖層（第二版）
+# 臺北市邊界圖層
 
 整理日期：2026-10-08
 座標：GeoPackage 為 TWD97 / TM2（EPSG:3826）；GeoJSON 為 WGS84（EPSG:4326）
 
-參考 NYC Boundaries（boundaries.beta.nyc），把臺北市「依官方規則劃分的各種轄區」整理成可以互相疊合、查重疊的圖層。每一層都只用官方公布的資料；官方資料判定不了的地方留空（欄位為空、預覽圖灰色），不用推測補。
-
-## 和第一版的差異
-
-- 拿掉地政事務所。
-- 新增：投開票所轄區、國小學區、國中學區、警察分局、派出所、地方法院、簡易庭、區清潔隊、健康服務中心、次分區、統計區二級發布區、都市計畫保存區、都市計畫工業區，以及加上標註的鄰界。
-- 市議員選區的依據換成中選會 2026 年公告（中選務字第1153150253號），劃分和第一版相同，加上各區應選名額。
+參考 NYC Boundaries（boundaries.beta.nyc），把臺北市「依官方規則劃分的各種轄區」整理成可以互相疊合、查重疊的圖層。每一層都只用官方公布的資料；官方資料判定不了的地方留空（欄位為空、網頁地圖上畫斜線），不用推測補。
 
 ## 檔案
 
-成果都在 `out/`：
+網站（https://sixianli.com/taipei-boundaries/）提供的下載：
 
-- `taipei_boundaries.gpkg`：所有圖層，TWD97
-- `geojson/`：同樣的圖層，每層一個檔，WGS84
-- `taipei_village_crosswalk.csv`：456 里對照表，每個里屬於哪個選區、分局、派出所、法院、次分區，以及里內有哪些投開票所、國中小
-- `taipei_neighbor_crosswalk.csv`：鄰對照表，每個鄰屬於哪個投開票所、國小學區、國中學區
-- `taipei_overlaps.csv`：兩層之間任兩個單位的重疊面積與比例（對應 NYC Boundaries 查重疊的功能）
-- `taipei_boundaries_preview.png`：各層預覽
-- `build_log.txt`：建置時每一項檢查的結果
+- `taipei_boundaries_geojson.zip`：所有圖層，每層一個 GeoJSON 檔，WGS84
+- `taipei_boundaries_gpkg.zip`：所有圖層，一個 GeoPackage 檔，TWD97
+- `taipei_boundaries_tables.zip`：三個表格
+  - `taipei_village_crosswalk.csv`：456 里對照表，每個里屬於哪個選區、分局、派出所、法院、次分區，以及里內有哪些投開票所、國中小
+  - `taipei_neighbor_crosswalk.csv`：鄰對照表，每個鄰屬於哪個投開票所、國小學區、國中學區
+  - `taipei_overlaps.csv`：兩層之間任兩個單位的重疊面積與比例（對應 NYC Boundaries 查重疊的功能）
+- 網頁上每個圖層也可以單獨下載 GeoJSON（壓縮檔）
 
-最上層的 `build.py` 等程式、`official/`、`raw/`、`raw2/`、`research/` 是重建用的程式、官方依據與原始檔。
+建置程式、原始檔和檢查紀錄沒有放在網站上。
 
 ## 圖層一覽
 
@@ -104,7 +98,7 @@
 
 ### 警察分局、派出所（`police_precinct`、`police_station`）
 
-- 依據：13 個分局官網逐一列出各派出所負責的里（原文存在 `research/police_raw.json`），2026-10-08 查詢。
+- 依據：13 個分局官網逐一列出各派出所負責的里，2026-10-08 查詢。
 - 大安分局官網和派出所業務職掌 PDF 都只寫「負責新生所轄內」之類，沒有里。大安區的里都沒有出現在其他 13 個分局的名單裡，其他 11 區的里也全被這 13 個分局涵蓋，所以分局層級大安分局＝大安區；派出所層級大安區留空。
 - 中正一／二分局、文山一／二分局都是依各自派出所的里名單合成。
 - 中山分局有 3 個里同時出現在兩個派出所的名單：民安里（中山一、中山二）、集英里（中山二、圓山）、劍潭里（圓山、大直）。這 3 個里各自是一個單位，標為兩所共管。
@@ -133,7 +127,7 @@
 
 ### 消防大隊、郵遞區號（`fire_brigade`、`postal3`）
 
-同第一版：消防局四個大隊各管三個行政區；郵遞區號前 3 碼一區一碼。
+消防局四個大隊各管三個行政區；郵遞區號前 3 碼一區一碼。
 
 ### 次分區（`subdistrict`，68 個）
 
@@ -156,7 +150,7 @@
 
 ## 每層都通過的檢查
 
-- 合成圖層：面積合計等於全市，單位之間的縫和重疊合計都小於 1 m²（明細見 `build_log.txt`），也沒有長度 20 m 以上的零寬度細線
+- 合成圖層：面積合計等於全市，單位之間的縫和重疊合計都小於 1 m²，也沒有長度 20 m 以上的零寬度細線
 - 立委選區每區里數與中選會 2024 一致（55、63、62、59、57、53、54、53）
 - 13 個分局的里名單剛好涵蓋大安區以外的 403 個里，每里只屬一個分局
 - 1,790 個投開票所都在圖上，各自在自己的里內
@@ -167,9 +161,9 @@
 
 `taipei_overlaps.csv` 涵蓋 12 層：行政區、立委、議員、警察分局、派出所、消防大隊、地方法院、簡易庭、次分區、投開票所、國小學區、國中學區。清潔隊、健康服務中心、郵遞區號和行政區相同，所以不重複列；里、統計區、都市計畫分區沒有放。小於 100 m² 的重疊視為邊線誤差，不列。
 
-## 互動地圖（`web/`）
+## 互動地圖
 
-`web/dist/` 是英文版互動地圖頁面和它用的資料；`web_data.py` 產生這些資料（需先在 `web/tools/` 執行 `npm install` 安裝 mapshaper）。
+網站上的英文版互動地圖：
 
 - 線條為網頁簡化過（容許誤差 2 m；單位面積變動中位數小於 0.02%，都市計畫分區的小多邊形約 0.1%）；里、鄰合成的圖層一起簡化，邊線仍然對齊。
 - 重疊比例用原始精度計算，列出「至少占較小單位 1%」的重疊。程式會和 `taipei_overlaps.csv` 逐列比對，全部一致才輸出。
@@ -198,7 +192,21 @@
 - 中選會選舉資料庫：https://db.cec.gov.tw/
 - 中選會公告中選務字第 1043150299 號（行政院公報）：https://gazette.nat.gov.tw/EG_FileManager/eguploadpub/eg021215/ch02/type3/gov15/num2/Eg.pdf
 - 臺北市中小學校學區：https://data.taipei/dataset/detail?id=678c5215-f14a-47e3-92bd-da43f9d7c7a9
-- 各警察分局派出所業務職掌：網址逐一列在 `research/police_raw.json`
+- 各警察分局派出所業務職掌：
+  - 中正第一分局：https://c1.police.gov.taipei/cp.aspx?n=61E382A8DAEC3522
+  - 中正第二分局：https://c2.police.gov.taipei/cp.aspx?n=C54A0FD81CF8F0A3
+  - 大同分局：https://tt.police.gov.taipei/News.aspx?n=1D9468CCB717E826&sms=A8939911614BA3CA
+  - 萬華分局：https://wh.police.gov.taipei/Content_List.aspx?n=4723E3624E2DF3F0
+  - 中山分局：https://cs.police.gov.taipei/cp.aspx?n=97CA8E54866322DD
+  - 松山分局：https://ss.police.gov.taipei/cp.aspx?n=2B67072DEFADF37E
+  - 信義分局：https://sy.police.gov.taipei/News.aspx?n=EF30B54130305F73&sms=44AE5B756DB76AEC（各派出所PDF）
+  - 南港分局：https://nk.police.gov.taipei/cp.aspx?n=51F44199CD466557
+  - 內湖分局：https://nh.police.gov.taipei/cp.aspx?n=83BD85E291E2F070
+  - 士林分局：https://sl.police.gov.taipei/cp.aspx?n=AFEB7AE4456A510E
+  - 北投分局：https://pt.police.gov.taipei/cp.aspx?n=0E92028DD1A6DC8F
+  - 文山第一分局：https://w1.police.gov.taipei/News.aspx?n=BD51051335F095B3&sms=CC92499E91FE689E
+  - 文山第二分局：https://w2.police.gov.taipei/cp.aspx?n=C65301D5FD2D2E91
+  - 大安分局：https://ta.police.gov.taipei/cp.aspx?n=1B98EEB25F4224B6（及各派出所業務執掌PDF）
 - 司法院各法院資訊：https://www.judicial.gov.tw/tw/cp-1889-119101-8a7a0-1.html
 - 臺北市各區清潔隊電話：https://data.taipei/dataset/detail?id=d42f6798-9824-4abf-b552-51a9146f4906
 - 臺北市各區健康服務中心組織規程：https://laws.gov.taipei/law/LawSearch/LawPrint/FL031277?type=0
@@ -212,7 +220,3 @@
 - 臺北市各行政區人口數及戶數（民政局，用來核對）：https://data.taipei/dataset/detail?id=6a1dbb4e-e99c-4e67-ab09-f6d83852dc99
 - 臺北市寬度超過 8 公尺道路（工務局，底圖）：https://data.taipei/dataset/detail?id=ee2e4015-8844-48fb-aa57-31209909b0fc
 - 臺北捷運車站出入口座標（臺北捷運公司，底圖）：https://data.taipei/dataset/detail?id=cfa4778c-62c1-497b-b704-756231de348b
-
-每個原始檔的下載網址與 SHA-256 記在 `official/sources_manifest.json`。各層的劃分規則記在 `official/bases.json`。
-
-重建：`python3 parse_polls.py && python3 build.py && python3 preview.py`（需要 geopandas、pdfplumber、matplotlib），會重跑上面全部檢查。

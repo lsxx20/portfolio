@@ -113,6 +113,7 @@ header.top p { margin: 0; color: var(--ink-2); font-size: 13px; max-width: 46ch;
 .sources a { color: var(--accent); text-decoration: none; }
 .sources a:hover { text-decoration: underline; }
 .hint { color: var(--ink-3); }
+.hint a { color: var(--accent); }
 .clear { justify-self: start; border: 1px solid var(--rule); background: none; border-radius: 5px; padding: 4px 10px; cursor: pointer; color: var(--ink-2); }
 .clear:hover { background: var(--hover); }
 .card-head { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; }
@@ -185,7 +186,9 @@ svg.map { display: block; width: 100%; height: 100%; background: var(--bg); touc
   header.top { order: 1; } .search { order: 2; } .layer-select { order: 3; }
   .mapwrap { order: 4; }
   header.top, .search, .layer-select, .side-scroll { background: var(--panel); }
-  .mapbox { position: relative; height: 62vh; min-height: 340px; }
+  .mapbox { position: relative; }
+  svg.map { height: 62vh; min-height: 340px; }
+  .legend { position: static; max-width: none; border: 0; border-top: 1px solid var(--rule); border-radius: 0; padding: 10px 16px; }
   .panel { position: static; width: auto; max-height: none; border: 0; border-top: 1px solid var(--rule); border-radius: 0; box-shadow: none; }
   .side-scroll { overflow: visible; }
   .layers { display: none; }
@@ -364,12 +367,14 @@ const ORDER = ["district", "village", "council_2026", "legislator", "polling_202
   "postal3", "subdistrict", "segis_l2", "zoning_heritage", "zoning_industrial"];
 const OFFICIAL = ["subdistrict", "segis_l2", "zoning_heritage", "zoning_industrial"];
 const NULLS = new Set(["Not determined", "Station not published"]);
+const DOWNLOADS = {"district": ["downloads/layers/taipei_district.zip", "112 KB"], "village": ["downloads/layers/taipei_village.zip", "315 KB"], "council_2026": ["downloads/layers/taipei_council_2026.zip", "85 KB"], "legislator": ["downloads/layers/taipei_legislator.zip", "98 KB"], "polling_2026": ["downloads/layers/taipei_polling_2026.zip", "630 KB"], "school_elementary": ["downloads/layers/taipei_school_elementary.zip", "280 KB"], "school_junior_high": ["downloads/layers/taipei_school_junior_high.zip", "231 KB"], "police_precinct": ["downloads/layers/taipei_police_precinct.zip", "116 KB"], "police_station": ["downloads/layers/taipei_police_station.zip", "193 KB"], "fire_brigade": ["downloads/layers/taipei_fire_brigade.zip", "81 KB"], "court_district": ["downloads/layers/taipei_court_district.zip", "68 KB"], "court_summary": ["downloads/layers/taipei_court_summary.zip", "84 KB"], "sanitation": ["downloads/layers/taipei_sanitation.zip", "112 KB"], "health_center": ["downloads/layers/taipei_health_center.zip", "112 KB"], "postal3": ["downloads/layers/taipei_postal3.zip", "112 KB"], "subdistrict": ["downloads/layers/taipei_subdistrict.zip", "179 KB"], "segis_l2": ["downloads/layers/taipei_segis_l2.zip", "447 KB"], "zoning_heritage": ["downloads/layers/taipei_zoning_heritage.zip", "7 KB"], "zoning_industrial": ["downloads/layers/taipei_zoning_industrial.zip", "51 KB"]};  // web/site.py fills this in: {layer: [zip path, size]}
 
 const $ = id => document.getElementById(id);
 const fmtInt = d3.format(",");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const hasCJK = s => /[㐀-鿿]/.test(s || "");
 
+let KEYS = {};  // per layer: the token that names each unit in the address
 let U, OV, FEAT = {}, BOX = {}, LAYERS, proj, path, zoom, svg, gZoom, transform = d3.zoomIdentity;
 let BASEMAP = {}, METRO = [], POP_MONTH = "", CITY_POP = 0;
 const state = { layer: "district", sel: null, prev: null, point: null, shade: false };
@@ -386,7 +391,9 @@ const densClass = d => d == null ? 0 : 1 + BREAKS.filter(b => d >= b).length;
 
 function fmtArea(km2) {
   if (km2 == null) return "";
-  return km2 >= 0.1 ? `${km2.toLocaleString("en", { maximumFractionDigits: 2 })} km²` : `${fmtInt(Math.round(km2 * 1e6))} m²`;
+  if (km2 >= 0.1) return `${km2.toLocaleString("en", { maximumFractionDigits: 2 })} km²`;
+  const m2 = Math.round(km2 * 1e6);
+  return m2 < 1 ? "<1 m²" : `${fmtInt(m2)} m²`;
 }
 function fmtPct(bp) {
   const p = bp / 100;
@@ -501,7 +508,7 @@ function drawLabels() {
       for (const c of geom.coordinates) { const g1 = { type: "Polygon", coordinates: c }; const a = path.area(g1); if (a > ba) { ba = a; best = g1; } }
       geom = best;
     }
-    return { c: path.centroid(geom), t: m.label(U[l][i]), zh: hasCJK(m.label(U[l][i])) };
+    return { c: path.centroid(geom), a: path.area(geom), t: m.label(U[l][i]), zh: hasCJK(m.label(U[l][i])) };
   });
   lab.selectAll("text").data(data).join("text").attr("class", d => "lbl" + (d.zh ? " zh" : "")).text(d => d.t);
   placeLabels();
@@ -509,10 +516,22 @@ function drawLabels() {
 function placeLabels() {
   placeMetro();
   d3.select("#labels").selectAll("text").attr("x", d => transform.applyX(d.c[0])).attr("y", d => transform.applyY(d.c[1]));
+  declutter();
   if (state.point) {
     const p = proj(state.point);
     d3.select("#pin").attr("cx", transform.applyX(p[0])).attr("cy", transform.applyY(p[1])).attr("hidden", null);
   } else d3.select("#pin").attr("hidden", "");
+}
+// hide a label that would overlap one already placed; larger units are placed first, and hidden labels return when zoomed in
+function declutter() {
+  const texts = d3.select("#labels").selectAll("text").attr("visibility", null).nodes()
+    .sort((p, q) => d3.select(q).datum().a - d3.select(p).datum().a);
+  const kept = [];
+  for (const t of texts) {
+    const b = t.getBBox(), r = [b.x - 2, b.y - 1, b.x + b.width + 2, b.y + b.height + 1];
+    if (kept.some(k => r[0] < k[2] && r[2] > k[0] && r[1] < k[3] && r[3] > k[1])) t.setAttribute("visibility", "hidden");
+    else kept.push(r);
+  }
 }
 function drawLegend() {
   const l = state.layer, hasNull = U[l].some(u => NULLS.has(u.n));
@@ -546,6 +565,7 @@ function drawSelection() {
   d3.select("#prev").attr("d", p ? path(FEAT[p.layer][p.i]) : null);
   placeLabels();
   drawLegend();
+  writeHash();
 }
 
 // ---------- tooltip
@@ -574,6 +594,7 @@ function renderLayerInfo() {
     <p class="hint">${hasPop(l) ? `Population: ${esc(POP_MONTH)}, summed from villages. Shade by density in the legend.` : esc(NOPOP[NOPOP_LAYER[l]] || "")}</p>
     ${state.prev ? `<p class="hint">Dashed outline: your earlier selection, ${nameHTML(U[state.prev.layer][state.prev.i])} (${esc(LAYER[state.prev.layer].title)}).</p>` : ""}
     <p class="hint">Click an area on the map, or search for a name above.</p>
+    ${DOWNLOADS && DOWNLOADS[l] ? `<p class="hint"><a href="${esc(DOWNLOADS[l][0])}" download>Download this layer</a> (GeoJSON, zipped, ${esc(DOWNLOADS[l][1])})</p>` : ""}
     <div>${sourcesHTML(hasPop(l) ? [...m.src, "pop"] : m.src)}</div>`;
 }
 function renderUnit() {
@@ -650,7 +671,6 @@ function setLayer(l, keepSel) {
   state.layer = l;
   document.querySelectorAll(".layer-btn").forEach(b => b.setAttribute("aria-pressed", b.dataset.layer === l));
   $("layer-sel").value = l;
-  try { history.replaceState(null, "", "#" + l); } catch (e) {}
   drawLayer();
   drawSelection();
   if (!state.sel) renderLayerInfo();
@@ -684,6 +704,43 @@ function zoomToFeature(f) {
   const k = Math.max(1, Math.min(16, 0.55 / Math.max((x1 - x0) / w, (y1 - y0) / r.height)));
   const t = d3.zoomIdentity.translate(w / 2, r.height / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
   svg.transition().duration(matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 600).call(zoom.transform, t);
+}
+
+// ---------- shareable address: #layer, #layer/unit, #layer/unit@x,y (x, y in TWD97 metres)
+// A unit is named by its official code where it has one (village, subdistrict, school codes), otherwise by its
+// name; when that is not unique in the layer (or the unit is a blank area) its position in the data is used: ~index.
+function unitKey(u) {
+  const a = Object.fromEntries(u.a || []);
+  const code = a["Village code"] || a["Code"] || a["School codes"];
+  return (code || u.n).replace(/,\s*/g, "-").replace(/\s*\/\s*/g, "+").replace(/ /g, "_");
+}
+function buildKeys() {
+  for (const l of ORDER) {
+    const k = U[l].map(unitKey), count = {};
+    k.forEach(t => { count[t] = (count[t] || 0) + 1; });
+    KEYS[l] = k.map((t, i) => count[t] > 1 || NULLS.has(U[l][i].n) ? "~" + i : t);
+  }
+}
+function writeHash() {
+  const s = state.sel;
+  let h = "#" + state.layer;
+  if (s) {
+    h += "/" + encodeURIComponent(KEYS[s.layer][s.i]);
+    if (state.point) h += "@" + Math.round(state.point[0]) + "," + Math.round(state.point[1]);
+  }
+  if (location.hash !== h) try { history.replaceState(null, "", h); } catch (e) {}
+}
+function applyHash() {
+  const m = /^#([a-z0-9_]+)(?:\/([^@]+))?(?:@(-?\d+),(-?\d+))?$/.exec(location.hash || "");
+  const l = m && LAYER[m[1]] ? m[1] : "district";
+  let i = -1;
+  if (m && LAYER[m[1]] && m[2]) { try { i = KEYS[l].indexOf(decodeURIComponent(m[2])); } catch (e) {} }
+  state.sel = state.prev = state.point = null;
+  setLayer(l, false);
+  if (i < 0) return;
+  const pt = m[3] ? [+m[3], +m[4]] : null;
+  state.point = pt && unitAt(l, pt[0], pt[1]) === i ? pt : null;  // drop a spot that is not inside the unit
+  select(l, i, true);
 }
 
 // ---------- search
@@ -751,8 +808,9 @@ async function start() {
 
   buildLayerList();
   buildIndex();
-  const h = (location.hash || "").slice(1);
-  setLayer(LAYER[h] ? h : "district", false);
+  buildKeys();
+  applyHash();
+  window.addEventListener("hashchange", applyHash);
   $("loading").hidden = true;
 
   let rt;
