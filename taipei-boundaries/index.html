@@ -296,7 +296,7 @@ img { max-width: 100%; }
       <details class="about" id="about">
         <summary>About this map</summary>
         <p>All layers come from official data. Layers built from villages (里) or lin (鄰) share the same edges. Hatched areas are land the official data does not assign to any unit.</p>
-        <p>Shapes are simplified for the web. Overlap percentages use the full-resolution data.</p>
+        <p>Shapes are simplified for the web: 99% of every boundary stays within 1 m of the official line. Overlap percentages use the full-resolution data.</p>
         <p>English names are official where one exists. Labels like “Polling station 0917” are descriptions.</p>
         <p>Population is household registration by village, September 2026, shown only for layers made of whole villages.</p>
         <p>Squares mark district offices, police, health centers, schools and fire stations. They sit at the official street address, placed with the Civil Affairs Department’s house-number coordinates; fire stations use the Fire Department’s own coordinates.</p>
@@ -623,6 +623,10 @@ function drawBase() {
 // view (k < 1.5), even on a very large screen.
 const METRO_DOTS = 8, METRO_NAMES = 4;
 const metresPerPx = () => 1 / (proj.scale() * transform.k);
+// closest zoom: a quarter metre per screen pixel, the same on every screen size, so the city's level-13 tiles
+// (0.26 m, drawn at 1:1000) show at full detail
+const MAX_ZOOM_MPP = 0.25;
+const maxZoomK = () => Math.max(1, 1 / (proj.scale() * MAX_ZOOM_MPP));
 function metroLevel() {  // 0 nothing, 1 dots, 2 dots and names
   if (state.base === "emap") return 0;  // the street map has its own stations
   const m = metresPerPx();
@@ -661,31 +665,43 @@ const BASEMAPS = {
 };
 const TILES = new Map();  // "z/row/col" -> { img, z, r, c, done }
 let tileTimer, tileZ = -1, tileKeys = new Set();  // tileKeys: the tiles the current view needs
+const MAX_TILES = 150;  // per view; the city asks users of its tile service not to fetch large batches in a short time
 
 function tileView() {
   const bm = BASEMAPS[state.base], r = $("map").getBoundingClientRect();
-  const mpp = metresPerPx();
+  // metres per DEVICE pixel: a high-resolution screen (2 device pixels per CSS pixel) gets tiles one level finer.
+  // Capped at 2, so a 3x phone screen asks for the same tiles as a 2x one rather than twice as many.
+  const mpp = metresPerPx() / Math.min(window.devicePixelRatio || 1, 2);
   let z = WMTS.res.findIndex(res => res <= mpp * 1.25);   // coarsest level that is about as sharp as the screen
   if (z < 0) z = WMTS.res.length - 1;
   const [xa, ya] = proj.invert(transform.invert([0, 0])), [xb, yb] = proj.invert(transform.invert([r.width, r.height]));
   const x0 = Math.max(Math.min(xa, xb), bm.bbox[0]), x1 = Math.min(Math.max(xa, xb), bm.bbox[2]);
   const y0 = Math.max(Math.min(ya, yb), bm.bbox[1]), y1 = Math.min(Math.max(ya, yb), bm.bbox[3]);
-  const span = 256 * WMTS.res[z], need = [];
-  if (x0 < x1 && y0 < y1) {
-    const c0 = Math.floor((x0 - WMTS.x0) / span), c1 = Math.floor((x1 - WMTS.x0) / span);
-    const r0 = Math.floor((WMTS.y0 - y1) / span), r1 = Math.floor((WMTS.y0 - y0) / span);
-    for (let row = r0; row <= r1; row++) for (let col = c0; col <= c1; col++) need.push([z, row, col]);
-  }
+  const cover = z => {  // the tiles of level z that the view needs
+    const span = 256 * WMTS.res[z], need = [];
+    if (x0 < x1 && y0 < y1) {
+      const c0 = Math.floor((x0 - WMTS.x0) / span), c1 = Math.floor((x1 - WMTS.x0) / span);
+      const r0 = Math.floor((WMTS.y0 - y1) / span), r1 = Math.floor((WMTS.y0 - y0) / span);
+      for (let row = r0; row <= r1; row++) for (let col = c0; col <= c1; col++) need.push([z, row, col]);
+    }
+    return need;
+  };
+  let need = cover(z);
+  while (need.length > MAX_TILES && z > 0) need = cover(--z);  // a very large screen: one level coarser rather than hundreds of tiles
   return { z, need };
 }
 function placeTile(t) {
-  const span = 256 * WMTS.res[t.z], k = proj.scale() * transform.k;
-  const p = proj([WMTS.x0 + t.c * span, WMTS.y0 - t.r * span]);
-  const size = span * k;
-  // round outward by a fraction of a pixel so neighbouring tiles leave no hairline seams
-  t.img.style.left = (transform.applyX(p[0]) - 0.25) + "px";
-  t.img.style.top = (transform.applyY(p[1]) - 0.25) + "px";
-  t.img.style.width = t.img.style.height = (size + 0.5) + "px";
+  // Tile edges are snapped to whole device pixels (an edge shared by two tiles is worked out the same way for both),
+  // and each tile reaches a little into its right and lower neighbours: 1 device pixel, or 2 on screens scaled to
+  // 125% or 150%. Otherwise the background shows through as hairline seams between tiles.
+  const span = 256 * WMTS.res[t.z], d = window.devicePixelRatio || 1, over = (Number.isInteger(d) ? 1 : 2) / d;
+  const ex = c => Math.round(transform.applyX(proj([WMTS.x0 + c * span, 0])[0]) * d) / d;
+  const ey = r => Math.round(transform.applyY(proj([0, WMTS.y0 - r * span])[1]) * d) / d;
+  const left = ex(t.c), top = ey(t.r);
+  t.img.style.left = left + "px";
+  t.img.style.top = top + "px";
+  t.img.style.width = (ex(t.c + 1) - left + over) + "px";
+  t.img.style.height = (ey(t.r + 1) - top + over) + "px";
 }
 function updateTiles(load) {
   const bm = BASEMAPS[state.base], box = $("tiles");
@@ -1047,7 +1063,7 @@ async function start() {
     drawBase();
   };
   fit();
-  zoom = d3.zoom().scaleExtent([1, 60]).on("zoom", ev => {
+  zoom = d3.zoom().scaleExtent([1, maxZoomK()]).on("zoom", ev => {
     transform = ev.transform;
     gZoom.attr("transform", transform);
     placeLabels();
@@ -1071,7 +1087,7 @@ async function start() {
   $("loading").hidden = true;
 
   let rt;
-  new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { fit(); drawLayer(); drawSelection(); updateTiles(true); }, 120); }).observe($("map"));
+  new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { fit(); zoom.scaleExtent([1, maxZoomK()]); drawLayer(); drawSelection(); updateTiles(true); }, 120); }).observe($("map"));
 
   $("q").addEventListener("input", runSearch);
   $("q").addEventListener("keydown", e => { if (e.key === "Escape") { $("q").value = ""; runSearch(); } if (e.key === "Enter") { const b = $("results").querySelector("button"); if (b) b.click(); } });
