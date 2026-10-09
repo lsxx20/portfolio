@@ -137,6 +137,33 @@ details.about p { margin: 10px 0 0; max-width: 62ch; }
 details.about a { color: var(--accent); }
 
 svg.map { display: block; width: 100%; height: 100%; background: var(--bg); touch-action: none; }
+/* base map tiles: an HTML layer under the SVG, so the browser can move and scale the images cheaply */
+svg.map { position: relative; }
+.tiles { position: absolute; left: 0; top: 0; width: 100%; overflow: hidden; pointer-events: none; z-index: 0; }  /* own stacking context: tiles stay under the map, buttons and legend */
+.tiles img { position: absolute; max-width: none; user-select: none; -webkit-user-drag: none; }
+.tiles.topo { filter: grayscale(1); opacity: .75; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tiles.topo { filter: grayscale(1) invert(1); opacity: .6; } }
+:root[data-theme="dark"] .tiles.topo { filter: grayscale(1) invert(1); opacity: .6; }
+.has-tiles svg.map { background: transparent; }
+.has-tiles .land { fill: none; }
+/* the city's tiles carry neighbouring areas too (the aerial photo fills them with black): cover everything outside the city */
+.outside { display: none; }
+.has-tiles .outside { display: inline; fill: var(--bg); fill-rule: evenodd; pointer-events: none; }
+.has-tiles .water, .has-tiles .roads { display: none; }
+.base-topo .unit { stroke: var(--ink); stroke-width: 1.1; }
+.base-topo .unit.sparse { stroke-width: 1.6; }
+.base-aerial .unit { stroke: #fff; stroke-width: 1.2; }
+.base-aerial .unit.sparse { stroke-width: 1.8; }
+.base-aerial .city-edge { stroke: #fff; }
+.base-aerial .ctx { stroke: rgba(255, 255, 255, .6); }
+.legend .base { flex-wrap: wrap; gap: 4px; }
+.legend .base-k { color: var(--ink-3); margin-right: 2px; }
+.legend .base button { border: 1px solid var(--rule); background: var(--panel); border-radius: 4px; padding: 1px 7px; color: var(--ink-2); cursor: pointer; }
+.legend .base button:hover { background: var(--hover); }
+.legend .base button:focus-visible { outline: 2px solid var(--accent); }
+.legend .base button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+.legend .attrib { color: var(--ink-3); font-size: 11px; display: block; }
+.legend .attrib a { color: inherit; }
 .land { fill: var(--land); }
 .city-edge { fill: none; stroke: var(--ink-3); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
 .ctx { fill: none; stroke: var(--line-faint); stroke-width: 1; vector-effect: non-scaling-stroke; pointer-events: none; }
@@ -241,7 +268,7 @@ img { max-width: 100%; }
           <li><a href="downloads/taipei_boundaries_geojson.zip" download>All layers as GeoJSON</a><span class="what">20 files, zipped, 4.2 MB</span></li>
           <li><a href="downloads/taipei_boundaries_gpkg.zip" download>All layers as a GeoPackage</a><span class="what">one file, zipped, 7.3 MB</span></li>
           <li><a href="downloads/taipei_boundaries_tables.zip" download>Village and lin crosswalks, overlap table</a><span class="what">3 CSV files, zipped, 484 KB</span></li>
-          <li><a href="downloads/README_zh.md" download>Methods, sources and known issues</a><span class="what">in Chinese, 21 KB</span></li>
+          <li><a href="downloads/README_zh.md" download>Methods, sources and known issues</a><span class="what">in Chinese, 22 KB</span></li>
         </ul>
       </details>
       <details class="about" id="about">
@@ -250,7 +277,7 @@ img { max-width: 100%; }
         <p>Shapes are simplified for the web. Overlap percentages use the full-resolution data.</p>
         <p>English names are official where one exists. Labels like “Polling station 0917” are descriptions.</p>
         <p>Population is household registration by village, September 2026, shown only for layers made of whole villages.</p>
-        <p>Base map: roads wider than 8 m (Public Works Department), river zones (urban-plan zoning map), MRT stations (Taipei Rapid Transit Corporation).</p>
+        <p>Base maps: Simple draws roads wider than 8 m (Public Works Department), river zones (urban-plan zoning map) and MRT stations (Taipei Rapid Transit Corporation). The topographic map and aerial photo (2025) are loaded live from the Taipei City Urban Development Department.</p>
         <p>Methods, sources and known issues: <a href="downloads/README_zh.md">README</a> (in Chinese).</p>
         <p>Inspired by <a href="https://boundaries.beta.nyc/" target="_blank" rel="noopener">NYC Boundaries</a> by BetaNYC.</p>
       </details>
@@ -259,6 +286,7 @@ img { max-width: 100%; }
   </aside>
   <main class="mapwrap" id="mapwrap">
     <div class="mapbox" id="mapbox">
+    <div class="tiles" id="tiles" aria-hidden="true"></div>
     <svg class="map" id="map" role="img" aria-label="Map of Taipei boundaries">
       <defs>
         <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -268,6 +296,7 @@ img { max-width: 100%; }
       </defs>
       <g id="zoomg">
         <path class="land" id="land"></path>
+        <path class="outside" id="outside"></path>
         <path class="water" id="water"></path>
         <path class="roads" id="roads"></path>
         <g id="units"></g>
@@ -375,7 +404,7 @@ const hasCJK = s => /[㐀-鿿]/.test(s || "");
 let KEYS = {};  // per layer: the token that names each unit in the address
 let U, OV, FEAT = {}, BOX = {}, LAYERS, proj, path, zoom, svg, gZoom, transform = d3.zoomIdentity;
 let BASEMAP = {}, METRO = [], POP_MONTH = "", CITY_POP = 0;
-const state = { layer: "district", sel: null, point: null, shade: false };
+const state = { layer: "district", sel: null, point: null, shade: false, base: "simple" };
 const BREAKS = [5000, 15000, 25000, 40000];  // residents per km², fixed so layers can be compared
 const NOPOP = {
   lin: "No population: these zones are built from lin, and lin population is not published.",
@@ -536,15 +565,22 @@ function drawLegend() {
   let html = `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:${LAYER[l].patch ? "var(--line)" : "none"};fill-opacity:.1;stroke:var(--line)"></rect></svg>${esc(LAYER[l].title)}</div>`;
   if (hasNull) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:url(#hatch);stroke:var(--null)"></rect></svg>Not determined from official data</div>`;
   if (state.sel) html += `<div class="row"><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" style="fill:var(--accent-soft);stroke:var(--accent);stroke-width:2"></rect></svg>Selected</div>`;
-  html += `<div class="row" style="color:var(--ink-3)"><svg width="22" height="12"><rect x="1" y="2" width="9" height="8" style="fill:var(--water)"></rect><rect x="12" y="2" width="9" height="8" style="fill:var(--road);stroke:var(--rule)"></rect></svg>River zones, roads &gt; 8 m <svg width="12" height="12"><circle cx="6" cy="6" r="3" class="metro"></circle></svg>MRT</div>`;
+  const bm = BASEMAPS[state.base];
+  html += bm.url
+    ? `<div class="row" style="color:var(--ink-3)"><svg width="12" height="12"><circle cx="6" cy="6" r="3" class="metro"></circle></svg>MRT</div>`
+    : `<div class="row" style="color:var(--ink-3)"><svg width="22" height="12"><rect x="1" y="2" width="9" height="8" style="fill:var(--water)"></rect><rect x="12" y="2" width="9" height="8" style="fill:var(--road);stroke:var(--rule)"></rect></svg>River zones, roads &gt; 8 m <svg width="12" height="12"><circle cx="6" cy="6" r="3" class="metro"></circle></svg>MRT</div>`;
   if (hasPop(l)) {
     html += `<label class="row" for="shade"><input type="checkbox" id="shade"${state.shade ? " checked" : ""}> Shade by population density</label>`;
     if (state.shade) html += `<div><div class="scale">${[1, 2, 3, 4, 5].map(k => `<span style="background:var(--d${k})"></span>`).join("")}</div>
       <div class="ticks"><span>0</span>${BREAKS.map(b => `<span>${b / 1000}k</span>`).join("")}</div>
       <div class="ticks" style="display:block">residents per km², ${esc(POP_MONTH)}</div></div>`;
   }
+  html += `<div class="row base" role="group" aria-label="Base map"><span class="base-k">Base map</span>${Object.entries(BASEMAPS).map(([k, b]) =>
+    `<button type="button" data-base="${k}" aria-pressed="${state.base === k}">${b.short}</button>`).join("")}</div>`;
+  if (bm.url) html += `<span class="attrib">${bm.credit}: <a href="${UDD_DOC}" target="_blank" rel="noopener">Taipei City Urban Development Dept.</a></span>`;
   $("legend").innerHTML = html;
   const cb = $("shade"); if (cb) cb.onchange = () => setShade(cb.checked);
+  $("legend").querySelectorAll("[data-base]").forEach(b => { b.onclick = () => setBase(b.dataset.base); });
 }
 function drawBase() {
   d3.select("#water").attr("d", path(BASEMAP.water));
@@ -562,6 +598,97 @@ function drawSelection() {
   placeLabels();
   drawLegend();
   writeHash();
+}
+
+// ---------- base map tiles
+// Taipei City Urban Development Department WMTS in TWD97 (EPSG:3826), tile matrix set "default028mm":
+// top-left corner (-5372600, 10001100), 256-pixel tiles, metres per pixel = scale denominator x 0.00028.
+const UDD = "https://www.historygis.udd.gov.taipei/arcgis/rest/services/";
+const UDD_DOC = "https://www.historygis.udd.gov.taipei/urban/map/doc/%E8%87%BA%E5%8C%97%E5%B8%82%E6%94%BF%E5%BA%9C%E9%83%BD%E5%B8%82%E7%99%BC%E5%B1%95%E5%B1%80WMTS%E5%9C%96%E7%A3%9A%E6%9C%8D%E5%8B%99%E4%BB%8B%E6%8E%A5%E8%AA%AA%E6%98%8E.pdf";
+const WMTS = { x0: -5372600, y0: 10001100,
+  res: [1.181177957593862E7, 9449423.660750896, 4724711.830375448, 2362355.915187724, 944942.3660750897, 472471.18303754483,
+        236235.59151877242, 94494.23660750895, 47247.118303754476, 23623.559151877238, 9449.423660750896, 4724.711830375448,
+        2362.355915187724, 944.9423660750896, 472.4711830375448, 236.2355915187724].map(d => d * 0.00028) };
+const BASEMAPS = {
+  simple: { short: "Simple" },
+  topo: { short: "Topographic", credit: "Topographic map (2025)", cls: "topo", bbox: [293391, 2759039, 319864, 2791263],  // the service's own extent
+    url: (z, r, c) => `${UDD}TOPO_97/DGN_2025_97/MapServer/WMTS/tile/1.0.0/TOPO_97_DGN_2025_97/default/default028mm/${z}/${r}/${c}.png` },
+  aerial: { short: "Aerial", credit: "Aerial photo (2025)", cls: "aerial", bbox: [295200, 2760900, 317600, 2789700],
+    url: (z, r, c) => `${UDD}Aerial_97/Ortho_2025_97/MapServer/WMTS/tile/1.0.0/Aerial_97_Ortho_2025_97/default/default028mm/${z}/${r}/${c}` },
+};
+const TILES = new Map();  // "z/row/col" -> { img, z, r, c, done }
+let tileTimer, tileZ = -1;
+
+function tileView() {
+  const bm = BASEMAPS[state.base], r = $("map").getBoundingClientRect();
+  const mpp = 1 / (proj.scale() * transform.k);            // metres per CSS pixel right now
+  let z = WMTS.res.findIndex(res => res <= mpp * 1.25);   // coarsest level that is about as sharp as the screen
+  if (z < 0) z = WMTS.res.length - 1;
+  const [xa, ya] = proj.invert(transform.invert([0, 0])), [xb, yb] = proj.invert(transform.invert([r.width, r.height]));
+  const x0 = Math.max(Math.min(xa, xb), bm.bbox[0]), x1 = Math.min(Math.max(xa, xb), bm.bbox[2]);
+  const y0 = Math.max(Math.min(ya, yb), bm.bbox[1]), y1 = Math.min(Math.max(ya, yb), bm.bbox[3]);
+  const span = 256 * WMTS.res[z], need = [];
+  if (x0 < x1 && y0 < y1) {
+    const c0 = Math.floor((x0 - WMTS.x0) / span), c1 = Math.floor((x1 - WMTS.x0) / span);
+    const r0 = Math.floor((WMTS.y0 - y1) / span), r1 = Math.floor((WMTS.y0 - y0) / span);
+    for (let row = r0; row <= r1; row++) for (let col = c0; col <= c1; col++) need.push([z, row, col]);
+  }
+  return { z, need };
+}
+function placeTile(t) {
+  const span = 256 * WMTS.res[t.z], k = proj.scale() * transform.k;
+  const p = proj([WMTS.x0 + t.c * span, WMTS.y0 - t.r * span]);
+  const size = span * k;
+  // round outward by a fraction of a pixel so neighbouring tiles leave no hairline seams
+  t.img.style.left = (transform.applyX(p[0]) - 0.25) + "px";
+  t.img.style.top = (transform.applyY(p[1]) - 0.25) + "px";
+  t.img.style.width = t.img.style.height = (size + 0.5) + "px";
+}
+function updateTiles(load) {
+  const bm = BASEMAPS[state.base], box = $("tiles");
+  if (!bm.url) { TILES.forEach(t => t.img.remove()); TILES.clear(); return; }
+  if (load) {
+    const { z, need } = tileView();
+    tileZ = z;
+    const keys = new Set(need.map(n => n.join("/")));
+    for (const [z1, r, c] of need) {
+      const key = `${z1}/${r}/${c}`;
+      if (TILES.has(key)) continue;
+      const img = new Image(), t = { img, z: z1, r, c, done: false };
+      img.alt = "";
+      img.decoding = "async";
+      img.onload = () => { t.done = true; sweep(keys); };
+      img.onerror = () => { t.done = true; img.remove(); sweep(keys); };
+      img.src = bm.url(z1, r, c);
+      TILES.set(key, t);
+      box.appendChild(img);
+    }
+    sweep(keys);
+  }
+  TILES.forEach(t => { t.img.style.zIndex = t.z === tileZ ? 2 : 1; placeTile(t); });
+}
+// once every tile of the current view has arrived, drop the ones from other zoom levels or out of view
+function sweep(keys) {
+  for (const k of keys) { const t = TILES.get(k); if (t && !t.done) return; }
+  for (const [k, t] of TILES) if (!keys.has(k)) { t.img.remove(); TILES.delete(k); }
+}
+function scheduleTiles() {
+  updateTiles(false);  // move and scale what is already there on every frame
+  clearTimeout(tileTimer);
+  tileTimer = setTimeout(() => updateTiles(true), 150);  // ask for new tiles once the map stops moving
+}
+function setBase(k) {
+  if (!BASEMAPS[k] || k === state.base) return;
+  state.base = k;
+  const bm = BASEMAPS[k];
+  TILES.forEach(t => t.img.remove()); TILES.clear();
+  $("tiles").className = "tiles" + (bm.cls ? " " + bm.cls : "");
+  const mb = $("mapbox");
+  mb.classList.toggle("has-tiles", !!bm.url);
+  mb.classList.toggle("base-topo", k === "topo");
+  mb.classList.toggle("base-aerial", k === "aerial");
+  updateTiles(true);
+  drawLegend();
 }
 
 // ---------- tooltip
@@ -784,6 +911,8 @@ async function start() {
     path = d3.geoPath(proj);
     d3.select("#land").attr("d", path(cityF));
     d3.select("#edge").attr("d", path(cityF));
+    d3.select("#outside").attr("d", "M-100000,-100000H100000V100000H-100000Z" + path(cityF));  // a frame with the city cut out
+    $("tiles").style.height = r.height + "px";
     drawBase();
   };
   fit();
@@ -792,6 +921,7 @@ async function start() {
     gZoom.attr("transform", transform);
     placeLabels();
     hideTip();
+    if (state.base !== "simple") scheduleTiles();
   });
   svg.call(zoom).on("dblclick.zoom", null);
   $("zin").onclick = () => svg.transition().duration(250).call(zoom.scaleBy, 1.6);
@@ -806,7 +936,7 @@ async function start() {
   $("loading").hidden = true;
 
   let rt;
-  new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { fit(); drawLayer(); drawSelection(); }, 120); }).observe($("map"));
+  new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { fit(); drawLayer(); drawSelection(); updateTiles(true); }, 120); }).observe($("map"));
 
   $("q").addEventListener("input", runSearch);
   $("q").addEventListener("keydown", e => { if (e.key === "Escape") { $("q").value = ""; runSearch(); } if (e.key === "Enter") { const b = $("results").querySelector("button"); if (b) b.click(); } });
