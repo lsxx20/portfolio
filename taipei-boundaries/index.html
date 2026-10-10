@@ -189,6 +189,11 @@ svg.map { position: relative; }
 .fac-list li { display: grid; gap: 1px; }
 .fac-list .fac-addr { color: var(--ink-3); font-size: 12.5px; }
 .fac-list .fac-note { color: var(--ink-2); font-size: 12.5px; }
+.fac-wide summary { cursor: pointer; color: var(--accent); font-size: 12.5px; }
+.fac-wide .fac-list { margin-top: 6px; }
+.fac-links a { color: var(--accent); text-decoration: none; }
+.fac-links a:hover { text-decoration: underline; }
+.legend .fac-zoom { color: var(--ink-3); }
 .unit.shaded { fill-opacity: .82; }
 .unit.shaded:hover { fill-opacity: .6; }
 .unit { fill: transparent; stroke: var(--line); stroke-width: .6; vector-effect: non-scaling-stroke; cursor: pointer; }
@@ -289,8 +294,8 @@ img { max-width: 100%; }
         <ul>
           <li><a href="downloads/taipei_boundaries_geojson.zip" download>All layers as GeoJSON</a><span class="what">20 files, zipped, 4.2 MB</span></li>
           <li><a href="downloads/taipei_boundaries_gpkg.zip" download>All layers as a GeoPackage</a><span class="what">one file, zipped, 7.3 MB</span></li>
-          <li><a href="downloads/taipei_boundaries_tables.zip" download>Village and lin crosswalks, overlaps, facility locations</a><span class="what">4 CSV files, zipped, 501 KB</span></li>
-          <li><a href="downloads/README_zh.md" download>Methods, sources and known issues</a><span class="what">in Chinese, 26 KB</span></li>
+          <li><a href="downloads/taipei_boundaries_tables.zip" download>Village and lin crosswalks, overlaps, facility locations</a><span class="what">4 CSV files, zipped, 574 KB</span></li>
+          <li><a href="downloads/README_zh.md" download>Methods, sources and known issues</a><span class="what">in Chinese, 29 KB</span></li>
         </ul>
       </details>
       <details class="about" id="about">
@@ -299,7 +304,7 @@ img { max-width: 100%; }
         <p>Shapes are simplified for the web: 99% of every boundary stays within 1 m of the official line. Overlap percentages use the full-resolution data.</p>
         <p>English names are official where one exists. Labels like “Polling station 0917” are descriptions.</p>
         <p>Population is household registration by village, September 2026, shown only for layers made of whole villages.</p>
-        <p>Squares mark district offices, police, health centers, schools and fire stations. They sit at the official street address, placed with the Civil Affairs Department’s house-number coordinates; fire stations use the Fire Department’s own coordinates.</p>
+        <p>Squares mark district offices, police, health centers, schools, fire stations, evacuation shelters and polling places. They sit at the official street address, placed with the Civil Affairs Department’s house-number coordinates; fire stations use the Fire Department’s own coordinates.</p>
         <p>Base maps: Simple draws roads wider than 8 m (Public Works Department), river zones (urban-plan zoning map) and MRT stations (Taipei Rapid Transit Corporation). The street map and aerial photo (2025) are loaded live from the Taipei City Urban Development Department.</p>
         <p>Methods, sources and known issues: <a href="downloads/README_zh.md">README</a> (in Chinese).</p>
         <p>Inspired by <a href="https://boundaries.beta.nyc/" target="_blank" rel="noopener">NYC Boundaries</a> by BetaNYC.</p>
@@ -379,6 +384,8 @@ const SRC = {
   healthList: ["Dept. of Health: district health centers (2026-09-21)", DT + "d4c6d4e0-c2b4-48e3-99b4-f670d820326b"],
   fireList: ["Fire Dept.: fire station locations (2026-09-23)", DT + "a9fa2045-f7a6-4e16-ad26-577748064cdf"],
   eduList: ["Dept. of Education: schools of all levels (2026-09-30)", "https://data.gov.tw/dataset/121225"],
+  shelters: ["Dept. of Social Welfare: evacuation shelters and the villages they serve (2025 list)", DT + "f327232d-9230-44d0-bf0c-df151802da32"],
+  evacMaps: ["District offices: evacuation map of each village, one dataset per district (2026)", "https://data.taipei/dataset?qs=%E5%90%84%E9%87%8C%E7%B0%A1%E6%98%93%E7%96%8F%E6%95%A3%E9%81%BF%E9%9B%A3%E5%9C%B0%E5%9C%96%E8%B3%87%E8%A8%8A"],
 };
 const LAYER = {
   district: { noun: "districts", title: "Districts", group: "Administrative", label: u => u.n.replace(" District", ""),
@@ -602,7 +609,7 @@ function drawLegend() {
   html += bm.url
     ? `<div class="row metro-key" style="color:var(--ink-3)"${hide}>${mrt}</div>`
     : `<div class="row" style="color:var(--ink-3)"><svg width="22" height="12"><rect x="1" y="2" width="9" height="8" style="fill:var(--water)"></rect><rect x="12" y="2" width="9" height="8" style="fill:var(--road);stroke:var(--rule)"></rect></svg>River zones, roads &gt; 8 m <span class="metro-key"${hide}>${mrt}</span></div>`;
-  if (FAC[l]) html += `<div class="row"><svg width="22" height="12"><rect x="7.5" y="2.5" width="7" height="7" class="fac"></rect></svg>${esc(FAC_KIND[l][2])}</div>`;
+  if (FAC[l]) html += `<div class="row"><svg width="22" height="12"><rect x="7.5" y="2.5" width="7" height="7" class="fac"></rect></svg><span>${esc(FAC_KIND[l][2])}${FAC_ZOOM.has(l) ? `<span class="fac-zoom">, all shown when zoomed in</span>` : ""}</span></div>`;
   if (hasPop(l)) {
     html += `<label class="row" for="shade"><input type="checkbox" id="shade"${state.shade ? " checked" : ""}> Shade by population density</label>`;
     if (state.shade) html += `<div><div class="scale">${[1, 2, 3, 4, 5].map(k => `<span style="background:var(--d${k})"></span>`).join("")}</div>
@@ -788,17 +795,22 @@ const FAC_KIND = {  // [one, several (panel heading), legend]
   district: ["District office", "District office", "District offices"], police_precinct: ["Precinct headquarters", "Precinct headquarters", "Precinct headquarters"],
   police_station: ["Police station", "Police stations", "Police stations"], health_center: ["Health center", "Health center", "Health centers"],
   school_elementary: ["School", "Schools", "Schools"], school_junior_high: ["School", "Schools", "Schools"],
-  fire_brigade: ["Fire station", "Fire stations in this area", "Fire stations"] };
+  fire_brigade: ["Fire station", "Fire stations in this area", "Fire stations"],
+  village: ["Evacuation shelter", "Evacuation shelters", "Evacuation shelters"], polling_2026: ["Polling place", "Polling place", "Polling places"] };
 const FAC_SRC = { district: ["agencies", "addr"], police_precinct: ["policeUnits", "addr"], police_station: ["policeUnits", "addr"],
   health_center: ["healthList", "addr"], school_elementary: ["eduList", "agencies", "addr"], school_junior_high: ["eduList", "agencies", "addr"],
-  fire_brigade: ["fireList"] };
+  fire_brigade: ["fireList"], village: ["shelters", "evacMaps", "addr"], polling_2026: ["addr"] };
+// layers with hundreds of points: only the selected unit's are drawn until the map is zoomed in as far as for the MRT dots
+const FAC_ZOOM = new Set(["village", "polling_2026"]);
 let FAC = {};
 const facOf = (l, i) => (FAC[l] && FAC[l].units[i]) || [];
 function placeFacilities() {
   const l = state.layer, F = FAC[l], g = d3.select("#fac");
   if (!F) { g.selectAll("*").remove(); return; }
   const on = new Set(state.sel && state.sel.layer === l ? facOf(l, state.sel.i) : []);
-  const pts = F.pts.map(([x, y, n, a], k) => { const p = proj([x, y]); return { k, x: transform.applyX(p[0]), y: transform.applyY(p[1]), n, a, on: on.has(k) }; });
+  const all = !FAC_ZOOM.has(l) || (transform.k >= 1.5 && metresPerPx() <= METRO_DOTS);
+  const pts = F.pts.map(([x, y, n, a, t], k) => { const p = proj([x, y]); return { k, x: transform.applyX(p[0]), y: transform.applyY(p[1]), n, a, t, on: on.has(k) }; })
+    .filter(d => d.on || all);
   pts.sort((a, b) => a.on - b.on);  // selected ones on top
   g.selectAll("rect").data(pts, d => d.k).join("rect")
     .attr("class", d => "fac" + (d.on ? " on" : ""))
@@ -818,21 +830,45 @@ function placeFacilities() {
 }
 function showFacTip(ev, l, d) {
   const tip = $("tip"), r = $("mapbox").getBoundingClientRect();
-  tip.innerHTML = `<div class="zh">${esc(d.n)}</div><div class="t-sub">${esc(FAC_KIND[l][0])}</div><div class="t-sub zh">${esc(d.a)}</div>`;
+  tip.innerHTML = `<div class="zh">${esc(d.n)}</div><div class="t-sub">${esc(FAC_KIND[l][0])}</div><div class="t-sub zh">${esc(d.a)}</div>${d.t ? `<div class="t-sub">${esc(d.t)}</div>` : ""}`;
   tip.hidden = false;
   let x = ev.clientX - r.left + 14, y = ev.clientY - r.top + 14;
   if (x + tip.offsetWidth > r.width - 8) x = ev.clientX - r.left - tip.offsetWidth - 14;
   if (y + tip.offsetHeight > r.height - 8) y = ev.clientY - r.top - tip.offsetHeight - 14;
   tip.style.left = x + "px"; tip.style.top = y + "px";
 }
+const NOT_ON_MAP = "Not on the map: its address is not in the house-number data";
+function facItem(F, k, out) {  // name, address, the detail line the data carries (a shelter's type and use), a note
+  const p = F.pts[k];
+  return `<li><span class="zh">${esc(p[2])}</span><span class="fac-addr zh">${esc(p[3])}</span>${p[4] ? `<span class="fac-note">${esc(p[4])}</span>` : ""}${out.has(k) ? `<span class="fac-note">Stands outside the area it serves</span>` : ""}</li>`;
+}
 function facHTML(l, i) {
   const F = FAC[l]; if (!F) return "";
   const ids = facOf(l, i), missing = (F.missing && F.missing[i]) || [], out = new Set(F.outside || []);
-  if (!ids.length && !missing.length) return "";
-  const many = ids.length + missing.length > 1;
-  const items = ids.map(k => `<li><span class="zh">${esc(F.pts[k][2])}</span><span class="fac-addr zh">${esc(F.pts[k][3])}</span>${out.has(k) ? `<span class="fac-note">Stands outside the area it serves</span>` : ""}</li>`)
-    .concat(missing.map(n => `<li><span class="zh">${esc(n)}</span><span class="fac-note">Not on the map: its address is not in the house-number data</span></li>`));
-  return `<div><div class="section-label" style="margin-bottom:6px">${esc(FAC_KIND[l][many ? 1 : 0])}</div><ul class="fac-list">${items.join("")}</ul></div>`;
+  let html = "";
+  if (ids.length || missing.length) {
+    const many = ids.length + missing.length > 1;
+    const items = l === "polling_2026"   // the venue and address are already in the list above: say what else is there
+      ? ids.map(k => `<li><span class="fac-note">${esc(F.pts[k][4] || "")}</span></li>`).concat(missing.map(() => `<li><span class="fac-note">${NOT_ON_MAP}</span></li>`))
+      : ids.map(k => facItem(F, k, out)).concat(missing.map(n => `<li><span class="zh">${esc(n)}</span><span class="fac-note">${NOT_ON_MAP}</span></li>`));
+    html += `<div><div class="section-label" style="margin-bottom:6px">${esc(FAC_KIND[l][many ? 1 : 0])}</div><ul class="fac-list">${items.join("")}</ul></div>`;
+  }
+  if (l === "village") html += villageExtrasHTML(i);
+  return html;
+}
+// a village's district-wide shelters (listed "全區" in the source), and its evacuation map in Chinese and English
+function villageExtrasHTML(i) {
+  const F = FAC.village, u = U.village[i];
+  const wide = (F.groups && F.groups[u.s]) || [], wideMissing = (F.groupsMissing && F.groupsMissing[u.s]) || [];
+  let html = "";
+  if (wide.length || wideMissing.length) {
+    const items = wide.map(k => facItem(F, k, new Set())).concat(wideMissing.map(n => `<li><span class="zh">${esc(n)}</span><span class="fac-note">${NOT_ON_MAP}</span></li>`));
+    html += `<details class="fac-wide"><summary>Shelters for the whole district (${items.length})</summary><ul class="fac-list">${items.join("")}</ul></details>`;
+  }
+  const [zh, en] = (F.maps && F.maps[i]) || [];
+  const links = [zh && `<a href="${esc(zh)}" target="_blank" rel="noopener">In Chinese (PDF)</a>`, en && `<a href="${esc(en)}" target="_blank" rel="noopener">In English (PDF)</a>`].filter(Boolean);
+  if (links.length) html += `<div><div class="section-label" style="margin-bottom:6px">Evacuation map</div><div class="fac-links">${links.join(" / ")}</div></div>`;
+  return html;
 }
 
 // ---------- tooltip
@@ -852,6 +888,12 @@ function hideTip() { $("tip").hidden = true; }
 function sourcesHTML(keys) {
   return `<div class="section-label">Sources</div><ul class="sources">${keys.map(k => `<li><a href="${esc(SRC[k][1])}" target="_blank" rel="noopener">${esc(SRC[k][0])}</a></li>`).join("")}</ul>`;
 }
+function facHint(l) {
+  if (l === "fire_brigade") return "Squares mark the fire stations, at the Fire Department’s coordinates.";
+  if (l === "village") return "Squares mark the evacuation shelters of the selected village, at their official street addresses; zoom in to see all of them. Each village also links to its official evacuation map.";
+  if (l === "polling_2026") return "A square marks the polling place of the selected area, at its official street address; zoom in to see all of them.";
+  return `Squares mark each ${FAC_KIND[l][0].toLowerCase()}, at its official street address.`;
+}
 function renderLayerInfo() {
   const l = state.layer, m = LAYER[l];
   $("panel").innerHTML = `
@@ -859,7 +901,7 @@ function renderLayerInfo() {
     <p class="num">${countText(l)}</p>
     <p>${esc(m.about)}</p>
     <p class="hint">${hasPop(l) ? `Population: ${esc(POP_MONTH)}, summed from villages. Shade by density in the legend.` : esc(NOPOP[NOPOP_LAYER[l]] || "")}</p>
-    ${FAC[l] ? `<p class="hint">Squares mark ${l === "fire_brigade" ? "the fire stations, at the Fire Department’s coordinates" : "each " + FAC_KIND[l][0].toLowerCase() + ", at its official street address"}.</p>` : ""}
+    ${FAC[l] ? `<p class="hint">${facHint(l)}</p>` : ""}
     <p class="hint">Click an area on the map, or search for a name above.</p>
     ${DOWNLOADS && DOWNLOADS[l] ? `<p class="hint"><a href="${esc(DOWNLOADS[l][0])}" download>Download this layer</a> (GeoJSON, zipped, ${esc(DOWNLOADS[l][1])})</p>` : ""}
     <div>${sourcesHTML([...m.src, ...(hasPop(l) ? ["pop"] : []), ...(FAC_SRC[l] || [])])}</div>`;
